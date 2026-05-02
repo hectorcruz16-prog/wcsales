@@ -531,6 +531,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
   </div>
   <div class="panes-host">
     <div class="pane on" id="sp-ventas">
+      <div id="trivia-widget-seller"></div>
       <div style="padding:8px 16px 0;display:flex;gap:8px">
         <input type="search" id="sel-search" placeholder="🔍 Buscar cliente o teléfono..." oninput="filterSelSales()" style="flex:1;background:#f5f5f7;border:2px solid transparent;border-radius:12px;padding:9px 13px;font-size:14px;font-family:'Figtree',sans-serif;font-weight:600;outline:none">
         <button onclick="exportExcel('seller')" style="flex-shrink:0;padding:9px 13px;background:#d4f7e6;color:#006a44;border:none;border-radius:12px;font-size:13px;font-weight:800;font-family:'Figtree',sans-serif;cursor:pointer" title="Exportar Excel">📊</button>
@@ -707,6 +708,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
   </div>
   <div class="panes-host">
     <div class="pane on" id="mp-ventas">
+      <div id="trivia-widget-mgr"></div>
       <div style="padding:8px 16px 0;display:flex;gap:8px">
         <button onclick="exportExcel('mgr')" style="flex-shrink:0;padding:9px 13px;background:#d4f7e6;color:#006a44;border:none;border-radius:12px;font-size:13px;font-weight:800;font-family:'Figtree',sans-serif;cursor:pointer">📊</button>
         <input type="search" id="mgr-search" placeholder="🔍 Buscar cliente o teléfono..." oninput="filterMgrSales()" style="width:100%;background:#f5f5f7;border:2px solid transparent;border-radius:12px;padding:9px 13px;font-size:14px;font-family:'Figtree',sans-serif;font-weight:600;outline:none">
@@ -800,6 +802,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
   </div>
   <div class="panes-host">
     <div class="pane on" id="ap-resumen">
+      <div id="trivia-widget-adm"></div>
       <div style="padding:8px 16px 0;display:flex;gap:8px">
         <button onclick="exportExcel('adm')" style="flex-shrink:0;padding:9px 13px;background:#d4f7e6;color:#006a44;border:none;border-radius:12px;font-size:13px;font-weight:800;font-family:'Figtree',sans-serif;cursor:pointer">📊</button>
         <input type="search" id="adm-search" placeholder="🔍 Buscar cliente o teléfono..." oninput="filterAdmSales()" style="width:100%;background:#f5f5f7;border:2px solid transparent;border-radius:12px;padding:9px 13px;font-size:14px;font-family:'Figtree',sans-serif;font-weight:600;outline:none">
@@ -1595,6 +1598,7 @@ function buildTiers(cum,cid){
 // ═══ SELLER RENDER ═══
 function renderSeller(){
   const u=me();if(!u||(u.role!=='seller'&&u.role!=='ram'))return;
+  renderTriviaWidget('trivia-widget-seller','seller');
   const d=db(),cm=curMonth(),sales=repSales(d,u.id,cm),r=calcAll(sales);
   var _mg=getGoalForMonth(d,u.id,cm);const goalObj=_mg;const goal=_mg.gp||8000;
   document.getElementById('sel-hero').className='hero '+ph(r.cum,goal);
@@ -2357,6 +2361,7 @@ function toggleEl(id){const el=document.getElementById(id);if(el)el.style.displa
 
 function renderMgrMonth(){
   const u=me();if(!u||u.role!=='manager')return;
+  renderTriviaWidget('trivia-widget-mgr','mgr');
   const d=db(),cm=curMonth();
   const sellers=d.users.filter(s=>(s.role==='seller'||s.role==='ram')&&s.storeCode===u.storeCode);
   let tS=0,tGP=0,tC=0,tAccs=0,tP360=0;
@@ -2960,6 +2965,7 @@ function shiftAdmMonth(delta){
   renderAdmOverview();
 }
 function renderAdmOverview(){
+  renderTriviaWidget('trivia-widget-adm','adm');
   const d=db(),cm=_admMonth||curMonth();
   const codes=Object.keys(STORES),sellers=d.users.filter(u=>u.role==='seller'||u.role==='ram');
   const ms=d.sales.filter(s=>(s.date||'').startsWith(cm));
@@ -6671,6 +6677,66 @@ async function fetchGeminiSalesTip(){
 // TRIVIA GAME
 // ══════════════════════════════════════════════════════════════════════
 var TRIVIA_STATE=null;
+
+function getTriviaRecords(){
+  var d=db();var trivia=d._trivia||{};
+  var today=_triviaToday();
+  var now=new Date();
+  var dow=now.getDay();var diffToMon=dow===0?6:dow-1;
+  var weekStart=new Date(now);weekStart.setDate(now.getDate()-diffToMon);
+  var weekStartStr=weekStart.toISOString().split('T')[0];
+  var monthStr=today.substring(0,7);
+  var day=null,week=null,month=null;
+  Object.keys(trivia).forEach(function(date){
+    (trivia[date]||[]).forEach(function(s){
+      if(date===today&&(!day||s.score>day.score))day=Object.assign({},s,{date:date});
+      if(date>=weekStartStr&&date<=today&&(!week||s.score>week.score))week=Object.assign({},s,{date:date});
+      if(date.startsWith(monthStr)&&(!month||s.score>month.score))month=Object.assign({},s,{date:date});
+    });
+  });
+  return{day:day,week:week,month:month};
+}
+
+function renderTriviaWidget(elId,role){
+  var el=document.getElementById(elId);if(!el)return;
+  var plays=getTriviaPlays();var left=Math.max(0,3-plays);
+  var rec=getTriviaRecords();
+  var u=me();
+  var tabFn=role==='seller'?'selTab':role==='mgr'?'mgrTab':'admTab';
+  function recCard(label,emoji,r){
+    if(!r)return '<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center">'
+      +'<div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px">'+emoji+' '+label+'</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,0.35);font-weight:700">—</div>'
+      +'</div>';
+    var isMe=u&&r.uid===u.id;
+    return '<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center">'
+      +'<div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:2px">'+emoji+' '+label+'</div>'
+      +'<div style="font-size:16px;font-weight:900;color:'+(isMe?'#fbbf24':'#fff')+'">'+r.score+'</div>'
+      +'<div style="font-size:9px;color:rgba(255,255,255,0.6);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.name+'</div>'
+      +'<div style="font-size:8px;color:rgba(255,255,255,0.4)">'+r.storeCode+'</div>'
+      +'</div>';
+  }
+  var dotsHtml='';
+  for(var i=0;i<3;i++)dotsHtml+='<span style="width:8px;height:8px;border-radius:50%;background:'+(i<plays?'#fbbf24':'rgba(255,255,255,0.2)')+';display:inline-block;margin:0 2px"></span>';
+  el.innerHTML='<div style="margin:8px 16px 0;background:linear-gradient(135deg,#2d0043,#6b0080,#3d0052);border-radius:16px;padding:12px 14px;color:#fff;box-shadow:0 4px 16px rgba(110,0,128,0.35)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div><span style="font-size:15px;font-weight:900">🎮 Trivia Challenge</span>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:1px">Compite contra todas las tiendas</div></div>'
+    +'<button onclick="'+tabFn+'(\'trivia\')" style="background:#fbbf24;color:#1a0a1e;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap">'
+    +(left>0?'▶ Jugar':'Ver tabla')+'</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:6px;margin-bottom:10px">'
+    +recCard('Hoy','📅',rec.day)
+    +recCard('Semana','📆',rec.week)
+    +recCard('Mes','🗓️',rec.month)
+    +'</div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.55)">Tus partidas hoy: '+plays+'/3</div>'
+    +'<div>'+dotsHtml+'</div>'
+    +(left>0?'<div style="font-size:10px;color:rgba(255,255,255,0.55)">'+left+' restante'+(left>1?'s':'')+'</div>':'<div style="font-size:10px;color:#fbbf24">¡Límite alcanzado!</div>')
+    +'</div>'
+    +'</div>';
+}
 var _triviaContainerId='trivia-body';
 
 function _triviaToday(){return new Date().toISOString().split('T')[0];}
