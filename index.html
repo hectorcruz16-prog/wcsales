@@ -6814,69 +6814,170 @@ async function startTrivia(){
     +'<div style="font-size:14px;font-weight:700;color:#333">El AI está generando tus preguntas...</div>'
     +'<div style="font-size:12px;color:#aaa;margin-top:6px">Llama-3.3 · Modo trivia</div>'
     +'</div>';
-  var FACTS='CATALOGO COMPLETO CON SPECS EXACTOS — usa SOLO estos datos: '
-    +'iPHONE 17 PRO MAX: chip A19 Pro, pantalla 6.9 pulgadas Super Retina XDR, camara principal 48MP f/1.8 + teleobjetivo 48MP 5x zoom optico + ultra-gran-angular 48MP, titanio, USB-C 3.2. '
-    +'iPHONE 17 PRO: chip A19 Pro, pantalla 6.3 pulgadas, misma triple camara 48MP con 5x zoom, titanio. '
-    +'iPHONE 17 AIR: chip A18, pantalla 6.6 pulgadas, el iPhone MAS DELGADO de la historia (5.5mm de grosor), camara trasera unica 48MP, sin MagSafe magnetico. '
-    +'iPHONE 17: chip A18, pantalla 6.1 pulgadas, camara 48MP simple, aluminio. '
-    +'GALAXY S26 ULTRA: Snapdragon 8 Elite 2, camara 200MP principal + 50MP teleobjetivo 5x + 10MP teleobjetivo 3x + 12MP ultra-gran-angular, S Pen integrado, 12GB RAM, pantalla 6.9 pulgadas Dynamic AMOLED 2X. '
-    +'GALAXY S26+: Snapdragon 8 Elite 2, camara 50MP principal, 12GB RAM, pantalla 6.7 pulgadas. '
-    +'GALAXY S26: Snapdragon 8 Elite 2, camara 50MP principal, 12GB RAM, pantalla 6.2 pulgadas. '
-    +'GALAXY S25 FE: chip Exynos 2500, camara 200MP, pantalla 6.7 pulgadas, 8GB RAM. '
-    +'GALAXY A37 5G: chip Snapdragon 6 Gen 3, camara 50MP, pantalla 6.5 pulgadas Super AMOLED, 6GB RAM, bateria 5000mAh. '
-    +'GALAXY A17 5G: chip Dimensity 6300, camara 50MP, pantalla 6.5 pulgadas, 4GB RAM, bateria 5000mAh. '
-    +'iPAD A16: chip A16, pantalla 11 pulgadas Liquid Retina, compatible con Apple Pencil Pro y Magic Keyboard. '
-    +'SAMSUNG TAB A11+: pantalla 11 pulgadas TFT, chip Helio G99, 8GB RAM, bateria 8000mAh. '
-    +'APPLE WATCH SERIES 10: pantalla mas grande en la historia del Apple Watch, sensor temperatura corporal, crash detection. '
-    +'APPLE WATCH SE 3: version economica, sin siempre encendida, sin ECG. '
-    +'GALAXY WATCH 8: chip Exynos W1000, sensor BIA avanzado, 40mm o 44mm. '
-    +'GALAXY WATCH ULTRA: titanio, 47mm, bateria 590mAh, certificado militar MIL-STD-810H. '
-    +'PLANES: MORE es el plan premium estandar. BEYOND es el MAS completo — incluye todo de MORE mas beneficios adicionales. '
-    +'P360: cubre pantalla rota mismo dia, perdida, robo, dano por agua, McAfee Security, AppleCare+ en iPhones elegibles. '
-    +'HSI: internet 5G hogar sin tecnico ni contrato. SyncUP Tracker: GPS para carros mascotas mochilas.';
-  var TOPICS='Para las 5 preguntas de T-Mobile elige 5 DISTINTOS de esta lista (nunca repitas el mismo dispositivo ni tipo de pregunta): '
-    +'[1] spec especifico del iPhone 17 Pro Max (camara zoom, chip, pantalla, material); '
-    +'[2] spec especifico del iPhone 17 Air (grosor, chip, diferencia vs Pro); '
-    +'[3] comparacion directa iPhone 17 vs iPhone 17 Air vs iPhone 17 Pro (diferencia concreta de spec); '
-    +'[4] spec del Galaxy S26 Ultra (camara MP, RAM, S Pen, pantalla); '
-    +'[5] comparacion Galaxy S26 Ultra vs S26 o S26+ (diferencia concreta); '
-    +'[6] spec del Galaxy A37 5G o A17 5G (chip, bateria, camara, RAM); '
-    +'[7] comparacion Galaxy A37 vs A17 (diferencia concreta); '
-    +'[8] spec del iPad A16 o Samsung Tab A11+ (chip, pantalla, accesorios compatibles); '
-    +'[9] comparacion Apple Watch Series 10 vs SE 3 (feature que tiene uno y no el otro); '
-    +'[10] comparacion Galaxy Watch Ultra vs Watch 8 (material, tamano, bateria); '
-    +'[11] que servicio es HSI y como se diferencia de internet normal; '
-    +'[12] que cubre P360 exactamente (feature especifico, no la lista completa); '
-    +'[13] que hace SyncUP Tracker y para que sirve; '
-    +'[14] diferencia entre plan MORE y BEYOND (beneficio especifico que tiene BEYOND y MORE no). '
-    +'IMPORTANTE: en cada partida elige combinaciones distintas para que las preguntas nunca se repitan.';
-  var SALES_SCENARIOS='Escenarios de venta posibles (elige uno al azar): cliente dice "lo voy a pensar" antes de salir; cliente pide descuento que no puedes dar; cliente compara tu precio con otra tienda; cliente tiene upgrade disponible pero dice que su telefono funciona bien; cliente entra solo a pagar su bill; cliente trae un telefono roto y no tiene proteccion; cliente quiere el ultimo iPhone pero su credito no aplica; cliente esta insatisfecho con su plan actual.';
-  var prompt='Genera exactamente 7 preguntas de trivia EN ESPANOL. MEZCLA EL ORDEN — las preguntas de Puerto Rico y escenarios pueden aparecer en cualquier posicion. Distribucion: 5 preguntas sobre T-Mobile (sigue TOPICS estrictamente, elige 5 items distintos de la lista numerada), 1 pregunta sobre Puerto Rico (incluye variedad: historia, gastronomia, pueblos, playas, rios, municipios, cultura, personajes historicos, monumentos, fiestas patronales — NO solo musica), 1 pregunta de escenario de venta (usa '+SALES_SCENARIOS+' — pregunta que accion seria la MAS CORRECTA, con 4 opciones plausibles). Usa SOLO specs de '+FACTS+'. Haz las preguntas de specs MUY ESPECIFICAS con numeros concretos (MP, mm, GB, GHz) para que no se repitan. Devuelve SOLO el JSON array sin markdown. Formato: [{"q":"texto","opts":["A","B","C","D"],"ans":0,"cat":"tmobile"}] donde ans es indice 0-3 y cat es tmobile/pr/sales.';
+
+  var FACTS='CATALOGO COMPLETO CON SPECS EXACTOS: '
+    +'iPHONE 17 PRO MAX: chip A19 Pro, pantalla 6.9" Super Retina XDR, camara principal 48MP f/1.8 + teleobjetivo 48MP 5x zoom + ultra-gran-angular 48MP, cuerpo titanio, USB-C 3.2. '
+    +'iPHONE 17 PRO: chip A19 Pro, pantalla 6.3", triple camara 48MP con 5x zoom optico, titanio. '
+    +'iPHONE 17 AIR: chip A18, pantalla 6.6", el iPhone MAS DELGADO (5.5mm), camara trasera unica 48MP, sin MagSafe magnetico. '
+    +'iPHONE 17: chip A18, pantalla 6.1", camara 48MP simple, cuerpo aluminio. '
+    +'GALAXY S26 ULTRA: Snapdragon 8 Elite 2, 200MP principal + 50MP teleobjetivo 5x + 10MP teleobjetivo 3x + 12MP ultra-gran-angular, S Pen integrado, 12GB RAM, pantalla 6.9" Dynamic AMOLED 2X. '
+    +'GALAXY S26+: Snapdragon 8 Elite 2, 50MP principal, 12GB RAM, pantalla 6.7" Dynamic AMOLED 2X. '
+    +'GALAXY S26: Snapdragon 8 Elite 2, 50MP principal, 12GB RAM, pantalla 6.2" Dynamic AMOLED 2X. '
+    +'GALAXY S25 FE: Exynos 2500, 200MP, pantalla 6.7", 8GB RAM. '
+    +'GALAXY A37 5G: Snapdragon 6 Gen 3, 50MP, pantalla 6.5" Super AMOLED, 6GB RAM, bateria 5000mAh. '
+    +'GALAXY A17 5G: Dimensity 6300, 50MP, pantalla 6.5" TFT LCD, 4GB RAM, bateria 5000mAh. '
+    +'iPAD A16: chip A16, pantalla 11" Liquid Retina, compatible Apple Pencil Pro y Magic Keyboard Folio. '
+    +'SAMSUNG TAB A11+: pantalla 11" TFT, Helio G99, 8GB RAM, bateria 8000mAh. '
+    +'APPLE WATCH SERIES 10: pantalla mas grande de la historia, sensor temperatura corporal, crash detection, ECG. '
+    +'APPLE WATCH SE 3: economico, sin pantalla siempre encendida, sin ECG, sin sensor temperatura. '
+    +'GALAXY WATCH 8: Exynos W1000, sensor BIA avanzado, tallas 40mm o 44mm. '
+    +'GALAXY WATCH ULTRA: titanio, 47mm, 590mAh, certificado MIL-STD-810H, resistente 10ATM. '
+    +'PLAN MORE: plan premium estandar con streaming incluido. '
+    +'PLAN BEYOND: el MAS completo, incluye todo MORE mas datos internacionales ilimitados y beneficios de viaje adicionales. '
+    +'P360: cubre pantalla rota el mismo dia, perdida, robo, dano por agua, McAfee Security, AppleCare+ en iPhones elegibles. '
+    +'HSI: internet 5G para el hogar sin tecnico ni contrato largo. '
+    +'SyncUP Tracker: GPS para carros, mascotas o mochilas.';
+
+  // Pool of 30 specific topic questions — pick 5 at random each game
+  var TOPIC_POOL=[
+    '¿Cuántos mm de grosor tiene el iPhone 17 Air y qué lo hace especial?',
+    '¿Qué chip usa el iPhone 17 Pro Max y cuántas pulgadas mide su pantalla?',
+    '¿Cuántos MP tiene la cámara principal del iPhone 17 Air?',
+    '¿Qué material usa el cuerpo del iPhone 17 estándar vs el iPhone 17 Pro?',
+    '¿Cuál es la diferencia de pantalla entre el iPhone 17 (6.1") y el iPhone 17 Pro (6.3")?',
+    '¿Qué tiene el iPhone 17 Pro que el iPhone 17 Air NO tiene en cámaras?',
+    '¿Cuántos MP tiene la cámara PRINCIPAL del Galaxy S26 Ultra?',
+    '¿Cuántos MP tiene el teleobjetivo 5x del Galaxy S26 Ultra?',
+    '¿Cuántos MP tiene el ultra-gran-angular del Galaxy S26 Ultra?',
+    '¿Qué accesorio exclusivo viene integrado en el Galaxy S26 Ultra?',
+    '¿Cuánta RAM tiene el Galaxy S26 Ultra?',
+    '¿Cuántas pulgadas mide el Galaxy S26 estándar?',
+    '¿Cuántas pulgadas mide el Galaxy S26+?',
+    '¿Qué chip usa TODA la serie Galaxy S26?',
+    '¿Cuánta RAM tiene el Galaxy A37 5G?',
+    '¿Qué chip lleva el Galaxy A17 5G?',
+    '¿Qué tipo de pantalla tiene el A37 5G (Super AMOLED) vs el A17 5G (TFT LCD)?',
+    '¿Cuántos mAh de batería tienen el Galaxy A37 5G y el A17 5G?',
+    '¿Qué chip lleva el iPad A16 y cuántas pulgadas mide su pantalla?',
+    '¿Qué Apple Pencil es compatible con el iPad A16?',
+    '¿Cuánta batería tiene el Samsung Tab A11+ y qué chip usa?',
+    '¿Cuánta RAM tiene el Samsung Tab A11+?',
+    '¿Qué feature tiene el Apple Watch Series 10 que el SE 3 NO tiene (ECG o temperatura)?',
+    '¿Cuántos mm mide el Galaxy Watch Ultra y qué material usa su carcasa?',
+    '¿Qué certificación militar tiene el Galaxy Watch Ultra?',
+    '¿Qué diferencia al plan BEYOND del plan MORE?',
+    '¿Qué cubre P360 en caso de pantalla rota y en cuánto tiempo?',
+    '¿Qué es HSI y en qué se diferencia del internet regular?',
+    '¿Para qué sirve el SyncUP Tracker?',
+    '¿Qué chip y cuánta RAM tiene el Galaxy S25 FE?'
+  ];
+
+  var SALES_POOL=[
+    'cliente dice "lo voy a pensar" y se dirige a la puerta',
+    'cliente pide un descuento que no está autorizado',
+    'cliente compara el precio con AT&T o Claro',
+    'cliente tiene upgrade disponible pero dice que su teléfono funciona bien',
+    'cliente entra solo a pagar su bill pero tiene la pantalla rota',
+    'cliente quiere el iPhone 17 Pro Max pero su crédito no califica',
+    'cliente insatisfecho con su plan actual quiere cancelar',
+    'cliente pregunta si vale la pena añadir una línea para su hijo'
+  ];
+
+  var PR_TEMAS='Elige al azar entre: historia colonial, gastronomía típica, ríos y playas, municipios y su cultura, fiestas patronales, personajes históricos, monumentos o parques naturales. Varía el tema cada vez.';
+
+  function _shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+  var pickedTopics=_shuffle(TOPIC_POOL).slice(0,5);
+  var pickedScenario=SALES_POOL[Math.floor(Math.random()*SALES_POOL.length)];
+  var seed=Math.floor(Math.random()*99999);
+
+  var prompt='[Sesion #'+seed+'] Genera exactamente 7 preguntas de trivia EN ESPANOL para vendedores de T-Mobile Puerto Rico. '
+    +'MEZCLA el orden de todas las categorias aleatoriamente. '
+    +'Distribucion EXACTA: '
+    +'5 preguntas de T-Mobile — genera UNA pregunta por cada uno de estos 5 temas especificos: '
+    +pickedTopics.map(function(t,i){return '('+(i+1)+') '+t;}).join('; ')+'. '
+    +'1 pregunta de Puerto Rico — '+PR_TEMAS+'. '
+    +'1 pregunta de escenario de venta — situacion: "'+pickedScenario+'"; pregunta cual accion es la MAS CORRECTA; 4 opciones plausibles. '
+    +'Usa SOLO specs del catalogo: '+FACTS+'. '
+    +'REGLAS: usa numeros concretos (MP, mm, GB, pulgadas); opciones incorrectas deben ser plausibles; no repitas preguntas de otras sesiones. '
+    +'Devuelve SOLO el JSON array sin markdown ni texto extra. '
+    +'Formato: [{"q":"texto","opts":["A","B","C","D"],"ans":0,"cat":"tmobile"}] donde ans es indice 0-3 y cat es tmobile/pr/sales.';
+
   var qs=null;
   try{
-    var gk='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
-    var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+gk},
-      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:1600,temperature:1.0})
+    var res=await fetch('/functions/ai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:2000,temperature:1.1})
     });
     var data=await res.json();
     var raw=((data.choices||[])[0]?.message?.content||'').trim();
     var m=raw.match(/\[[\s\S]*\]/);
     if(m)qs=JSON.parse(m[0]);
   }catch(e){}
-  // Shuffle questions so PR/music aren't always last
+
   if(qs&&qs.length>=7){for(var i=qs.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=qs[i];qs[i]=qs[j];qs[j]=tmp;}}
+
   if(!qs||qs.length<7){
-    qs=[
+    // Fallback: banco grande de preguntas — seleccion aleatoria cada vez
+    var TM_BANK=[
       {q:'¿Cuántos mm de grosor tiene el iPhone 17 Air?',opts:['6.9mm','5.5mm','7.2mm','4.8mm'],ans:1,cat:'tmobile'},
-      {q:'¿Cuántos megapíxeles tiene la cámara ultra-gran-angular del Galaxy S26 Ultra?',opts:['50MP','200MP','12MP','108MP'],ans:2,cat:'tmobile'},
-      {q:'¿Qué chip usa el iPhone 17 Pro y el iPhone 17 Pro Max?',opts:['A18 Pro','A17 Pro','A19 Pro','M2'],ans:2,cat:'tmobile'},
+      {q:'¿Qué chip usa el iPhone 17 Pro Max?',opts:['A18 Pro','A17 Pro','A19 Pro','M2'],ans:2,cat:'tmobile'},
+      {q:'¿Cuántas pulgadas mide la pantalla del iPhone 17 Pro Max?',opts:['6.7"','6.5"','6.9"','7.1"'],ans:2,cat:'tmobile'},
+      {q:'¿Qué material usa el cuerpo del iPhone 17 Pro?',opts:['Aluminio','Titanio','Acero inoxidable','Fibra de carbono'],ans:1,cat:'tmobile'},
+      {q:'¿Cuántos MP tiene la cámara ultra-gran-angular del Galaxy S26 Ultra?',opts:['50MP','200MP','12MP','108MP'],ans:2,cat:'tmobile'},
       {q:'¿Cuánta RAM tiene el Galaxy S26 Ultra?',opts:['8GB','16GB','6GB','12GB'],ans:3,cat:'tmobile'},
+      {q:'¿Qué accesorio exclusivo viene integrado en el Galaxy S26 Ultra?',opts:['Stylus AirPen','S Pen','Apple Pencil','Lápiz Z'],ans:1,cat:'tmobile'},
+      {q:'¿Qué chip usa toda la serie Galaxy S26?',opts:['Exynos 2500','Snapdragon 8 Gen 3','Snapdragon 8 Elite 2','Dimensity 9400'],ans:2,cat:'tmobile'},
+      {q:'¿Cuántas pulgadas mide el Galaxy S26 estándar?',opts:['6.9"','6.7"','6.4"','6.2"'],ans:3,cat:'tmobile'},
+      {q:'¿Cuánta RAM tiene el Galaxy A37 5G?',opts:['4GB','8GB','6GB','12GB'],ans:2,cat:'tmobile'},
+      {q:'¿Qué chip lleva el Galaxy A17 5G?',opts:['Snapdragon 6 Gen 3','Helio G99','Dimensity 6300','Exynos 1380'],ans:2,cat:'tmobile'},
+      {q:'¿Qué tipo de pantalla tiene el Galaxy A37 5G?',opts:['TFT LCD','IPS LCD','Super AMOLED','OLED plano'],ans:2,cat:'tmobile'},
+      {q:'¿Cuántos mAh de batería tiene el Galaxy A17 5G?',opts:['4000mAh','5500mAh','5000mAh','4500mAh'],ans:2,cat:'tmobile'},
+      {q:'¿Cuántos mAh de batería tiene el Galaxy A37 5G?',opts:['4000mAh','4500mAh','5500mAh','5000mAh'],ans:3,cat:'tmobile'},
       {q:'¿Qué chip lleva el iPad A16?',opts:['M2','A17 Pro','A15','A16'],ans:3,cat:'tmobile'},
-      {q:'¿Cuál es el río más largo de Puerto Rico?',opts:['Río Camuy','Río Grande de Loíza','Río La Plata','Río Grande de Arecibo'],ans:1,cat:'pr'},
-      {q:'Un cliente dice "lo voy a pensar" y se dirige a la puerta. ¿Cuál es la mejor acción?',opts:['Dejarlo ir sin decir nada','Preguntarle qué duda específica le impide decidir hoy','Bajarle el precio inmediatamente','Llamarlo al día siguiente'],ans:1,cat:'sales'}
+      {q:'¿Cuántas pulgadas mide la pantalla del iPad A16?',opts:['10.2"','10.9"','11"','12.9"'],ans:2,cat:'tmobile'},
+      {q:'¿Qué Apple Pencil es compatible con el iPad A16?',opts:['Pencil 1ra gen','Pencil USB-C','Apple Pencil Pro','Pencil Mini'],ans:2,cat:'tmobile'},
+      {q:'¿Cuánta batería tiene el Samsung Tab A11+?',opts:['5000mAh','6000mAh','7000mAh','8000mAh'],ans:3,cat:'tmobile'},
+      {q:'¿Cuánta RAM tiene el Samsung Tab A11+?',opts:['4GB','6GB','8GB','12GB'],ans:2,cat:'tmobile'},
+      {q:'¿Qué feature tiene el Apple Watch Series 10 que el SE 3 NO tiene?',opts:['GPS','Contador de pasos','ECG','Notificaciones'],ans:2,cat:'tmobile'},
+      {q:'¿Cuántos mm mide el Galaxy Watch Ultra?',opts:['40mm','44mm','47mm','50mm'],ans:2,cat:'tmobile'},
+      {q:'¿Qué material usa la carcasa del Galaxy Watch Ultra?',opts:['Aluminio','Titanio','Acero inoxidable','Policarbonato'],ans:1,cat:'tmobile'},
+      {q:'¿Qué diferencia al plan BEYOND del plan MORE?',opts:['BEYOND no incluye streaming','MORE tiene más datos','BEYOND incluye beneficios internacionales adicionales','Son iguales'],ans:2,cat:'tmobile'},
+      {q:'¿Qué cubre P360 en caso de pantalla rota?',opts:['La reemplaza en 3 días','La repara o reemplaza el mismo día','Solo da crédito','No cubre pantallas'],ans:1,cat:'tmobile'},
+      {q:'¿Qué es HSI?',opts:['App de ventas','Internet 5G para el hogar sin contrato','Seguro de teléfono','Plan de datos compartidos'],ans:1,cat:'tmobile'},
+      {q:'¿Para qué sirve el SyncUP Tracker?',opts:['Monitorear datos del plan','GPS para carros, mascotas o mochilas','Control parental de apps','Pagar el bill'],ans:1,cat:'tmobile'},
+      {q:'¿Cuántas pulgadas mide el Galaxy S26+?',opts:['6.2"','6.5"','6.7"','6.9"'],ans:2,cat:'tmobile'},
+      {q:'¿Cuánto zoom óptico tiene el teleobjetivo principal del Galaxy S26 Ultra?',opts:['3x','4x','10x','5x'],ans:3,cat:'tmobile'},
+      {q:'¿Cuántos MP tiene la cámara principal del Galaxy S26 estándar?',opts:['200MP','108MP','50MP','64MP'],ans:2,cat:'tmobile'},
+      {q:'¿Cuántas pulgadas mide el iPhone 17 estándar?',opts:['6.3"','6.6"','6.1"','5.9"'],ans:2,cat:'tmobile'}
     ];
+    var PR_BANK=[
+      {q:'¿Cuál es el río más largo de Puerto Rico?',opts:['Río Camuy','Río Grande de Loíza','Río La Plata','Río Grande de Arecibo'],ans:1,cat:'pr'},
+      {q:'¿Cuál es el municipio más grande de Puerto Rico por área?',opts:['San Juan','Ponce','Arecibo','Jayuya'],ans:2,cat:'pr'},
+      {q:'¿Qué bosque es el único tropical del sistema nacional de bosques de EE.UU.?',opts:['Bosque de Guánica','Bosque del Toro Negro','El Yunque','Bosque de Cambalache'],ans:2,cat:'pr'},
+      {q:'¿Cuál es el plato representativo de Puerto Rico?',opts:['Arroz con pollo','Pernil con arroz y gandules','Mofongo','Pasteles'],ans:1,cat:'pr'},
+      {q:'¿En qué año Puerto Rico se convirtió en Estado Libre Asociado?',opts:['1898','1917','1952','1968'],ans:2,cat:'pr'},
+      {q:'¿Cuál es la capital de Puerto Rico?',opts:['Ponce','Bayamón','Caguas','San Juan'],ans:3,cat:'pr'},
+      {q:'¿Cómo se llama la danza típica de Puerto Rico declarada patrimonio cultural?',opts:['La plena','La bomba','La danza','La salsa'],ans:2,cat:'pr'},
+      {q:'¿Cuál es la playa más famosa cerca de Ponce?',opts:['Playa de Luquillo','La Monserrate Luquillo','Playa Sucia','Playa El Tuque'],ans:3,cat:'pr'},
+      {q:'¿En qué municipio se encuentra el Observatorio de Arecibo?',opts:['Utuado','Camuy','Arecibo','Lares'],ans:2,cat:'pr'},
+      {q:'¿Cuál es el municipio más pequeño de Puerto Rico?',opts:['Cataño','Hormigueros','Loíza','Ceiba'],ans:1,cat:'pr'}
+    ];
+    var SALES_BANK=[
+      {q:'Un cliente dice "lo voy a pensar" y se dirige a la puerta. ¿Cuál es la mejor acción?',opts:['Dejarlo ir','Preguntarle qué duda específica le impide decidir hoy','Bajarle el precio','Llamarlo mañana'],ans:1,cat:'sales'},
+      {q:'Un cliente tiene upgrade disponible pero dice que su teléfono funciona bien. ¿Qué haces?',opts:['Decirle que regrese cuando se rompa','Mostrarle el valor del trade-in y beneficios del nuevo equipo','Solo ofrecerle accesorios','Ignorarlo'],ans:1,cat:'sales'},
+      {q:'Un cliente compara tu precio con AT&T. ¿Cuál es la respuesta más efectiva?',opts:['Decirle que son iguales','Enfatizar el valor de la red T-Mobile y beneficios incluidos','Pedirle la oferta por escrito','Decirle que no puedes hacer nada'],ans:1,cat:'sales'},
+      {q:'Un cliente entra a pagar su bill con la pantalla del teléfono rota. ¿Qué haces?',opts:['Solo cobras el bill','Cobras el bill y le mencionas P360 y opciones de upgrade','Le dices que vaya al técnico','Le prestas un teléfono'],ans:1,cat:'sales'},
+      {q:'Un cliente quiere el iPhone 17 Pro Max pero su crédito no califica. ¿Qué haces?',opts:['Decirle que no hay opciones','Mostrarle el iPhone 17 o iPhone 17 Air como alternativas','Pedirle un codeudor sin más explicación','Cancelar la transacción'],ans:1,cat:'sales'},
+      {q:'Un cliente insatisfecho quiere cancelar su línea. ¿Cuál es el primer paso?',opts:['Procesar la cancelación','Escuchar su queja, identificar el problema y ofrecer soluciones','Transferirlo al supervisor','Decirle que no puedes ayudarlo'],ans:1,cat:'sales'}
+    ];
+    var tmPick=_shuffle(TM_BANK).slice(0,5);
+    var prPick=_shuffle(PR_BANK).slice(0,1);
+    var salPick=_shuffle(SALES_BANK).slice(0,1);
+    qs=_shuffle(tmPick.concat(prPick,salPick));
   }
+
   TRIVIA_STATE={questions:qs,current:0,score:0,timer:null,startTime:0};
   showTriviaQuestion();
 }
