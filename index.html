@@ -526,6 +526,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
       <button class="mt" id="smt-concursos" onclick="selTab('concursos')" style="display:none"><span class="mt-icon">🏆</span>Concurso<span id="smt-concursos-dot" style="display:none;width:7px;height:7px;background:#ff3b5c;border-radius:50%;position:absolute;top:6px;right:6px"></span></button>
       <button class="mt" id="smt-trend" onclick="selTab('trend')"><span class="mt-icon">📈</span>Trend</button>
       <button class="mt" id="smt-cuota" onclick="selTab('cuota')"><span class="mt-icon">🎯</span>Mi Cuota</button>
+      <button class="mt" id="smt-trivia" onclick="selTab('trivia')"><span class="mt-icon">🎮</span>Trivia</button>
     </div>
   </div>
   <div class="panes-host">
@@ -574,6 +575,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
     <div class="pane" id="sp-mis-ventas"><div id="mis-ventas-body"></div></div>
     <div class="pane" id="sp-concursos"><div id="seller-concursos-body"></div></div>
     <div class="pane" id="sp-trend"><div id="trend-seller-body"></div></div>
+    <div class="pane" id="sp-trivia"><div id="trivia-body"></div></div>
     <div class="pane" id="sp-resultados">
       <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 16px 0">
@@ -1379,7 +1381,7 @@ function goAdd(){
 
 // ═══ MAIN TABS ═══
 function selTab(tab){
-  ['ventas','prospectos','tareas','followups','resultados','accesorios','cuota','mi-tienda','trend','mis-ventas','concursos'].forEach(t=>{
+  ['ventas','prospectos','tareas','followups','resultados','accesorios','cuota','mi-tienda','trend','mis-ventas','concursos','trivia'].forEach(t=>{
     const btn=document.getElementById('smt-'+t);
     const pane=document.getElementById('sp-'+t);
     if(btn) btn.classList.toggle('on',t===tab);
@@ -1396,6 +1398,7 @@ function selTab(tab){
   if(tab==='trend')renderTrendSeller();
   if(tab==='mis-ventas')renderMisVentasTab('seller');
   if(tab==='concursos')renderSellerConcursos();
+  if(tab==='trivia')renderTrivia();
 }
 function mgrTab(tab){
   ['ventas','equipo','concursos','tareas','resultados','cuota','prospectos','followups','trend','mis-ventas'].forEach(t=>{
@@ -5611,7 +5614,7 @@ const POPUP_CONTENT = {
     { icon:'💰', title:'Habla de ahorro, no de precio', body:'No digas "cuesta $80". Di "comparado con AT&T estarías ahorrando $240 al año — básicamente un iPhone en 3 años." Pon el precio en contexto de valor real.' },
     { icon:'🎧', title:'Escucha el 70%, habla el 30%', body:'Los mejores vendedores escuchan más de lo que hablan. Haz preguntas abiertas: "¿Qué es lo más importante para ti en un plan?" La respuesta te dice exactamente cómo cerrar.' },
     { icon:'📊', title:'Conoce tu mix de métricas', body:'No solo GP — revisa tu ratio de accesorios por venta, líneas por transacción, y HSI attach rate. Los asociados top tienen accesorios en el 70%+ de sus ventas.' },
-    { icon:'🛡️', title:'P360 — ciérralo con números reales', body:'No digas "es un seguro". Di: "Reparar la pantalla de este iPhone sin P360 cuesta $329+. Con P360 pagas $29/mes y el reemplazo es el mismo día. ¿Cuántas veces has roto un teléfono?" El cliente cierra solo.' },
+    { icon:'🛡️', title:'P360 — ciérralo con valor real', body:'No digas "es un seguro". Di: "Reparar la pantalla de este iPhone sin P360 cuesta cientos de dólares. Con P360 el reemplazo es el mismo día sin sorpresas. ¿Cuántas veces has roto un teléfono?" El cliente cierra solo.' },
     { icon:'🏠', title:'HSI — la pregunta que más dinero genera', body:'Antes de cada venta pregunta: "¿Cómo tienes el internet en casa?" Si paga más de $60/mes a Spectrum o Xfinity, tienes una venta de HSI lista. Es plug-and-play, sin técnico, sin contrato. Tu comisión adicional sin costo de adquisición.' },
     { icon:'📍', title:'Tracker — el add-on que nadie rechaza', body:'Después de activar la línea, muestra el SyncUP Tracker físico. "¿Tienes carro, hijos o mascotas? Esto lo agrego a tu cuenta por casi nada." Un accessory fácil, attach rate altísimo, y el cliente sale más satisfecho.' },
     { icon:'💼', title:'Agrupa: Phone + HSI + P360 = Max GP', body:'La venta perfecta tiene teléfono + Home Internet + Protection 360. Cada uno suma comisión. Un cliente que activa los 3 puede valer 3x la venta de solo un teléfono. Pregunta siempre por los 3.' },
@@ -5646,7 +5649,7 @@ const POPUP_CONTENT = {
     // ── PRODUCTOS T-MOBILE ──
     { icon:'🏠', title:'T-Mobile Home Internet (HSI)', specs:['Internet 5G sin contratos ni crédito','Gateway incluido · Sin técnico en casa','Velocidades hasta 300 Mbps típico','Desde $35/mes con línea activa'], pitch:'Véndelo así: "¿Cómo tienes el internet en casa? Con T-Mobile es plug-and-play — sin esperar técnico, sin contratos. ¿Cuánto pagas ahorita a Spectrum? Probablemente el doble."' },
     { icon:'📍', title:'T-Mobile Tracker (SyncUP)', specs:['Localizador GPS · Funciona en red T-Mobile','Sin cuota mensual con plan elegible','Para carros, mochilas, mascotas, llaves','App T-Mobile + compartir ubicación familia'], pitch:'Véndelo así: "¿Tienes hijos, carro o mascota? El Tracker se agrega a tu plan casi sin costo. Cada cliente con familia o carro es un sí fácil."' },
-    { icon:'🛡️', title:'Protection 360 (P360)', specs:['Pantalla rota: reemplazo mismo día','Pérdida y robo cubiertos','McAfee Security + soporte técnico 24/7','AppleCare+ incluido en iPhones elegibles'], pitch:'Véndelo así: "¿Cuánto cuesta reparar la pantalla de este iPhone 17 sin seguro? $400+. Con P360 son $29/mes y tienes reemplazo el mismo día."' },
+    { icon:'🛡️', title:'Protection 360 (P360)', specs:['Pantalla rota: reemplazo mismo día','Pérdida y robo cubiertos','McAfee Security + soporte técnico 24/7','AppleCare+ incluido en iPhones elegibles'], pitch:'Véndelo así: "¿Cuánto cuesta reparar la pantalla de este iPhone 17 sin seguro? Son cientos de dólares. Con P360 tienes reemplazo el mismo día sin costo adicional."' },
   ],
 
   // MODO 3: Noticias y ventajas T-Mobile
@@ -5662,7 +5665,7 @@ const POPUP_CONTENT = {
     { icon:'🎯', title:'Trade-in 2025 — Tu arma de cierre', body:'T-Mobile tiene los mejores trade-in values del mercado en 2025. Siempre empieza la conversación por ahí: ¿Qué teléfono tienes ahora? El valor del trade-in puede cubrir el iPhone 17 o S26 casi completo. No dejes ir al cliente sin correr el trade-in.' },
     { icon:'🏠', title:'Home Internet + Phone = ticket doble', body:'La pregunta que más dinero genera: ¿Cuánto pagas de internet en casa? Si dice más de $60, tienes una venta de HSI lista. Cada cliente de phone que conviertes a HSI dobla tu revenue por cuenta — comisión extra garantizada.' },
     { icon:'💼', title:'T-Mobile for Business — ventas grandes', body:'Business es el segmento de más rápido crecimiento en 2025. ¿Tu cliente tiene negocio? Pregunta cuántas líneas tienen. Un lead de business puede valer 5-20 líneas en una visita — califican para planes Business exclusivos con mejor precio por línea.' },
-    { icon:'🛡️', title:'Protection 360 — el seguro más completo', body:'P360 cubre pantalla rota, pérdida, robo, daño por agua + McAfee + soporte 24/7. En iPhones elegibles incluye AppleCare+. Sin P360, reparar un iPhone 17 Pro cuesta $400+. Con P360: $29/mes y reemplazo el mismo día.' },
+    { icon:'🛡️', title:'Protection 360 — el seguro más completo', body:'P360 cubre pantalla rota, pérdida, robo, daño por agua + McAfee + soporte 24/7. En iPhones elegibles incluye AppleCare+. Reparar un iPhone 17 Pro sin P360 cuesta cientos de dólares — con P360 el reemplazo es el mismo día.' },
     { icon:'⚡', title:'5G mmWave — velocidades de fibra', body:'En zonas metropolitanas, T-Mobile 5G Ultra Capacity alcanza 1-4 Gbps. Dato de impacto: Tu teléfono puede descargar una película en segundos. ¿Tu internet en casa puede hacer eso? Úsalo para cerrar HSI.' },
   ],
 
@@ -6657,6 +6660,191 @@ async function fetchGeminiSalesTip(){
 }
 
 (function(){const _d=db();var _changed=migrateUsers(_d);migrateGoals(_d);if(_changed){_d._v=(_d._v||0)+50;localStorage.setItem('wcs_v4',JSON.stringify(_d));if(window._fbSave)window._fbSave(_d);}else{save(_d);}initLogo();const u=me();if(u)route();else{const d=db();if(d._pending)showSetupPage(d._pending,d.users.filter(x=>x.role==='seller'&&x.storeCode===d._pending.storeCode));else showScreen('sc-login');}})();
+
+// ══════════════════════════════════════════════════════════════════════
+// TRIVIA GAME
+// ══════════════════════════════════════════════════════════════════════
+var TRIVIA_STATE=null;
+
+function _triviaToday(){return new Date().toISOString().split('T')[0];}
+function getTriviaPlays(){return parseInt(localStorage.getItem('wcs_trivia_'+_triviaToday())||'0');}
+function incTriviaPlays(){var n=getTriviaPlays()+1;localStorage.setItem('wcs_trivia_'+_triviaToday(),n);return n;}
+
+function renderTrivia(){
+  var body=document.getElementById('trivia-body');
+  if(!body)return;
+  var plays=getTriviaPlays();
+  var left=Math.max(0,3-plays);
+  var u=me();var d=db();
+  var today=_triviaToday();
+  var scores=((d._trivia&&d._trivia[today])||[]).slice().sort(function(a,b){return b.score-a.score;});
+  var medals=['🥇','🥈','🥉'];
+  var lbHtml=scores.length===0
+    ?'<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0">¡Sé el primero en jugar hoy!</div>'
+    :scores.slice(0,10).map(function(s,i){
+      var isMe=u&&s.uid===u.id;
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:'+(isMe?'#fdf2f8':'#f8f8fa')+';border-radius:10px;margin-bottom:4px">'
+        +'<span style="font-size:16px;min-width:24px">'+(medals[i]||'#'+(i+1))+'</span>'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:'+(isMe?'var(--m)':'#333')+'">'+s.name+'</div>'
+        +'<div style="font-size:10px;color:#999">'+(s.store||s.storeCode||'')+'</div></div>'
+        +'<span style="font-size:14px;font-weight:900;color:'+(isMe?'var(--m)':'#333')+'">'+s.score+' <span style="font-size:10px;font-weight:500">pts</span></span>'
+        +'</div>';
+    }).join('');
+  body.innerHTML='<div style="padding:16px;max-width:480px;margin:0 auto">'
+    +'<div style="text-align:center;margin-bottom:20px">'
+    +'<div style="font-size:40px;margin-bottom:6px">🎮</div>'
+    +'<div style="font-size:20px;font-weight:900;color:#111">Trivia T-Mobile PR</div>'
+    +'<div style="font-size:13px;color:#777;margin-top:4px">7 preguntas · 15 seg cada una · Compite con todas las tiendas</div>'
+    +'</div>'
+    +(left>0
+      ?'<button onclick="startTrivia()" style="width:100%;background:var(--m);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">🎯 ¡Jugar!</button>'
+      :'<div style="background:#f0f0f0;border-radius:14px;padding:14px;text-align:center;color:#999;font-size:13px;font-weight:600;margin-bottom:8px">✋ Vuelve mañana — ya jugaste 3 veces hoy</div>'
+    )
+    +'<div style="text-align:center;font-size:11px;color:#bbb;margin-bottom:24px">'+(left>0?left+' partida'+(left>1?'s':'')+' restante'+(left>1?'s':'')+' hoy':'Límite diario alcanzado')+'</div>'
+    +'<div style="font-size:11px;font-weight:800;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🏆 Ranking de hoy · Todas las tiendas</div>'
+    +lbHtml
+    +'</div>';
+}
+
+async function startTrivia(){
+  if(getTriviaPlays()>=3)return;
+  var body=document.getElementById('trivia-body');
+  body.innerHTML='<div style="padding:40px;text-align:center">'
+    +'<div style="font-size:36px;margin-bottom:12px">🤖</div>'
+    +'<div style="font-size:14px;font-weight:700;color:#333">El AI está generando tus preguntas...</div>'
+    +'<div style="font-size:12px;color:#aaa;margin-top:6px">Llama-3.3 · Modo trivia</div>'
+    +'</div>';
+  var CATALOG='Productos T-Mobile 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI Home Internet (internet para el hogar), Protection 360 (P360, cubre pantalla rotura pérdida y robo), SyncUP Tracker (GPS). Planes: MORE y BEYOND.';
+  var prompt='Genera exactamente 7 preguntas de trivia en español. Preguntas 1-5: sobre T-Mobile Puerto Rico ('+CATALOG+'). Pregunta 6: dato curioso de cultura, historia, geografia o gastronomia de Puerto Rico (NO tecnologia). Pregunta 7: sobre musica de Puerto Rico (reggaeton, salsa, artistas como Bad Bunny, Daddy Yankee, Ozuna, Anuel AA, etc.). Devuelve SOLO un array JSON, sin markdown ni texto extra. Cada objeto: {"q":"pregunta aqui","opts":["opcion A","opcion B","opcion C","opcion D"],"ans":0,"cat":"tmobile"} donde ans es el indice 0-3 correcto y cat es tmobile, pr o music.';
+  var qs=null;
+  try{
+    var gk='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
+    var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+gk},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:1400,temperature:0.8})
+    });
+    var data=await res.json();
+    var raw=((data.choices||[])[0]?.message?.content||'').trim();
+    var m=raw.match(/\[[\s\S]*\]/);
+    if(m)qs=JSON.parse(m[0]);
+  }catch(e){}
+  if(!qs||qs.length<7){
+    qs=[
+      {q:'¿Cuál es el plan más premium de T-Mobile?',opts:['MORE','BEYOND','Essentials','Go5G'],ans:1,cat:'tmobile'},
+      {q:'¿Qué servicio de T-Mobile da internet para el hogar sin técnico?',opts:['SyncUP','P360','HSI','BEYOND'],ans:2,cat:'tmobile'},
+      {q:'¿Cuál es el iPhone más reciente disponible en T-Mobile 2025-2026?',opts:['iPhone 16 Pro Max','iPhone 17 Pro Max','iPhone 15 Ultra','iPhone SE 4'],ans:1,cat:'tmobile'},
+      {q:'¿Qué cubre Protection 360 (P360)?',opts:['Solo pantalla rota','Solo robo','Pantalla, pérdida, robo y daño por agua','Solo daño por agua'],ans:2,cat:'tmobile'},
+      {q:'¿Cuál es el Samsung flagship más reciente en T-Mobile?',opts:['Galaxy S24 Ultra','Galaxy S25 Ultra','Galaxy S26 Ultra','Galaxy S23+'],ans:2,cat:'tmobile'},
+      {q:'¿Cuál es el plato más icónico de Puerto Rico?',opts:['Arroz con pollo','Mofongo','Sancocho','Pernil'],ans:1,cat:'pr'},
+      {q:'¿Quién es conocido como el "Rey del Reggaetón"?',opts:['J Balvin','Bad Bunny','Daddy Yankee','Don Omar'],ans:2,cat:'music'}
+    ];
+  }
+  TRIVIA_STATE={questions:qs,current:0,score:0,timer:null,startTime:0};
+  showTriviaQuestion();
+}
+
+function showTriviaQuestion(){
+  if(!TRIVIA_STATE)return;
+  var s=TRIVIA_STATE;
+  var q=s.questions[s.current];
+  var body=document.getElementById('trivia-body');
+  var isBonus=q.cat==='pr'||q.cat==='music';
+  var catLabel=q.cat==='pr'?'🇵🇷 Puerto Rico':q.cat==='music'?'🎵 Música PR':'📱 T-Mobile';
+  body.innerHTML='<div style="padding:16px;max-width:480px;margin:0 auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase">Pregunta '+(s.current+1)+' / '+s.questions.length+'</div>'
+    +'<div style="font-size:11px;font-weight:700;color:'+(isBonus?'#e20074':'#333')+';background:'+(isBonus?'#fdf2f8':'#f0f0f0')+';padding:3px 10px;border-radius:20px">'+catLabel+(isBonus?' ⭐':'')+'</div>'
+    +'</div>'
+    +'<div style="background:#eee;border-radius:4px;height:5px;margin-bottom:14px;overflow:hidden">'
+    +'<div id="trivia-tbar" style="height:100%;background:var(--m);border-radius:4px;width:100%;transition:width .1s linear"></div>'
+    +'</div>'
+    +'<div style="font-size:16px;font-weight:700;color:#111;line-height:1.45;margin-bottom:20px;min-height:56px">'+q.q+'</div>'
+    +'<div>'
+    +q.opts.map(function(opt,i){
+      return '<button onclick="answerTrivia('+i+')" id="topt-'+i+'" style="width:100%;text-align:left;background:#f8f8fa;border:2px solid #e8e8ea;border-radius:12px;padding:13px 14px;font-size:14px;font-weight:600;color:#333;cursor:pointer;margin-bottom:8px">'
+        +'<span style="font-weight:800;color:var(--m);margin-right:8px">'+['A','B','C','D'][i]+'</span>'+opt
+        +'</button>';
+    }).join('')
+    +'</div>'
+    +'<div style="text-align:center;margin-top:14px;font-size:14px;font-weight:800;color:#444">⭐ '+s.score+' pts</div>'
+    +'</div>';
+  var timeLeft=15;
+  s.startTime=Date.now();
+  if(s.timer)clearInterval(s.timer);
+  s.timer=setInterval(function(){
+    timeLeft-=0.1;
+    var bar=document.getElementById('trivia-tbar');
+    if(bar){bar.style.width=Math.max(0,(timeLeft/15)*100)+'%';if(timeLeft<=4)bar.style.background='#ff3b5c';}
+    if(timeLeft<=0){clearInterval(s.timer);answerTrivia(-1);}
+  },100);
+}
+
+function answerTrivia(idx){
+  if(!TRIVIA_STATE)return;
+  var s=TRIVIA_STATE;
+  var q=s.questions[s.current];
+  if(s.timer)clearInterval(s.timer);
+  var elapsed=(Date.now()-s.startTime)/1000;
+  var isBonus=q.cat==='pr'||q.cat==='music';
+  var base=isBonus?150:100;
+  var correct=idx===q.ans;
+  if(correct)s.score+=base+Math.round(Math.max(0,(15-elapsed)/15)*50);
+  for(var i=0;i<4;i++){
+    var btn=document.getElementById('topt-'+i);
+    if(!btn)continue;
+    btn.disabled=true;btn.style.cursor='default';
+    if(i===q.ans){btn.style.background='#d4f7e6';btn.style.borderColor='#006a44';btn.style.color='#006a44';}
+    else if(i===idx){btn.style.background='#ffe0e8';btn.style.borderColor='#e20074';btn.style.color='#e20074';}
+  }
+  setTimeout(function(){
+    s.current++;
+    if(s.current<s.questions.length)showTriviaQuestion();
+    else endTrivia();
+  },1300);
+}
+
+async function endTrivia(){
+  if(!TRIVIA_STATE)return;
+  var s=TRIVIA_STATE;
+  var finalScore=s.score;
+  TRIVIA_STATE=null;
+  var plays=incTriviaPlays();
+  var left=Math.max(0,3-plays);
+  var u=me();var d=db();
+  var today=_triviaToday();
+  if(!d._trivia)d._trivia={};
+  if(!d._trivia[today])d._trivia[today]=[];
+  d._trivia[today]=d._trivia[today].filter(function(x){return x.uid!==u.id;});
+  var storeName=(d.users||[]).find(function(x){return x.storeCode===u.storeCode&&x.role==='manager';});
+  d._trivia[today].push({uid:u.id,name:u.name,store:storeName?storeName.name:u.storeCode,storeCode:u.storeCode,score:finalScore,ts:Date.now()});
+  // Keep only last 30 days
+  Object.keys(d._trivia).sort().slice(0,-30).forEach(function(k){delete d._trivia[k];});
+  save(d);if(window._fbSave)window._fbSave(d);
+  var scores=(d._trivia[today]||[]).slice().sort(function(a,b){return b.score-a.score;});
+  var myRank=scores.findIndex(function(x){return x.uid===u.id;})+1;
+  var medals=['🥇','🥈','🥉'];
+  var lbHtml=scores.slice(0,10).map(function(sc,i){
+    var isMe=sc.uid===u.id;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:'+(isMe?'#fdf2f8':'#f8f8fa')+';border-radius:10px;margin-bottom:4px">'
+      +'<span style="font-size:15px;min-width:24px">'+(medals[i]||'#'+(i+1))+'</span>'
+      +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:'+(isMe?'var(--m)':'#333')+'">'+sc.name+'</div>'
+      +'<div style="font-size:10px;color:#999">'+(sc.store||sc.storeCode||'')+'</div></div>'
+      +'<span style="font-size:14px;font-weight:900;color:'+(isMe?'var(--m)':'#333')+'">'+sc.score+' pts</span>'
+      +'</div>';
+  }).join('');
+  var emoji=finalScore>=700?'🔥':finalScore>=450?'👏':'💪';
+  var body=document.getElementById('trivia-body');
+  body.innerHTML='<div style="padding:16px;max-width:480px;margin:0 auto;text-align:center">'
+    +'<div style="font-size:52px;margin-bottom:8px">'+emoji+'</div>'
+    +'<div style="font-size:28px;font-weight:900;color:#111;margin-bottom:4px">'+finalScore+' pts</div>'
+    +'<div style="font-size:13px;color:#777;margin-bottom:4px">Posición #'+myRank+' hoy entre todas las tiendas</div>'
+    +'<div style="font-size:11px;color:#bbb;margin-bottom:22px">'+(left>0?left+' partida'+(left>1?'s':'')+' restante'+(left>1?'s':''):'Límite diario alcanzado')+'</div>'
+    +(left>0?'<button onclick="startTrivia()" style="background:var(--m);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:800;cursor:pointer;margin-right:8px;margin-bottom:20px">Jugar de nuevo</button>':'')
+    +'<button onclick="renderTrivia()" style="background:#f0f0f0;color:#555;border:none;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:24px">Ver tabla</button>'
+    +'<div style="font-size:11px;font-weight:800;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;text-align:left">🏆 Ranking de hoy · Todas las tiendas</div>'
+    +lbHtml
+    +'</div>';
+}
 
 </script>
 <!-- Firebase via ES Modules (official method for modern browsers) -->
