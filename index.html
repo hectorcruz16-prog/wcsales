@@ -7010,12 +7010,6 @@ function renderReportTab(role){
     +'<div style="display:flex;gap:10px;margin-bottom:20px">'
     +'<button onclick="openReportWindow(\''+role+'\')" style="flex:1;padding:13px;background:var(--m);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer">🖥 Ver reporte completo</button>'
     +'</div>'
-    // Email section
-    +'<div style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px">'
-    +'<div style="font-size:13px;font-weight:800;margin-bottom:10px">✉️ Enviar por email</div>'
-    +'<textarea id="rpt-emails-'+role+'" placeholder="emails separados por coma&#10;ej: manager@tienda.com, director@empresa.com" style="width:100%;height:72px;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:13px;font-family:Figtree,sans-serif;resize:none;background:var(--bg);color:var(--ink)"></textarea>'
-    +'<button onclick="sendReportEmail(\''+role+'\')" style="width:100%;margin-top:10px;padding:12px;background:#111;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📤 Enviar reporte</button>'
-    +'</div>'
     +'</div>';
   _renderReportKPI(role);
 }
@@ -7237,28 +7231,6 @@ function buildReportHTML(rd){
     +'</body></html>';
 }
 
-async function sendReportEmail(role){
-  var emailsEl=document.getElementById('rpt-emails-'+role);
-  if(!emailsEl)return;
-  var raw=emailsEl.value.trim();
-  if(!raw){toast('Ingresa al menos un email','err');return;}
-  var emails=raw.split(/[\s,;]+/).filter(function(e){return e.includes('@');});
-  if(!emails.length){toast('Emails inválidos','err');return;}
-  var rd=_reportData(role);
-  var html=buildReportHTML(rd);
-  var subject='Reporte de Ventas — '+rd.scopeLabel+' — '+rd.periodLabel;
-  toast('Enviando reporte...');
-  try{
-    var res=await fetch('/functions/send-report',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({emails:emails,subject:subject,html:html})
-    });
-    var data=await res.json();
-    if(data.ok){toast('✓ Reporte enviado a '+emails.length+' destinatario'+(emails.length>1?'s':''));}
-    else{toast('Error al enviar: '+(data.error||'desconocido'),'err');}
-  }catch(e){toast('Error de conexión al enviar','err');}
-}
 
 </script>
 <!-- Firebase via ES Modules (official method for modern browsers) -->
