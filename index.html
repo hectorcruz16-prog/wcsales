@@ -6248,6 +6248,20 @@ function buildRepTrendCard(rep,sales,goals,cm,showName){
       ${p.daysLeft>0&&p.pacePct<100?`<div style="font-size:9px;color:var(--muted);margin-top:2px">Necesitas ${m.fmt(p.dailyNeeded)}/día</div>`:''}
     </div>`;
   });
+  // P360 count row
+  const p360Total=sales.reduce((a,s)=>a+(parseInt(s.p360)||0),0);
+  const voiceTotal=Math.round(calcPace(sales,g.nuevas||0,mVoice).actual);
+  const p360SoftGoal=g.nuevas>0?Math.ceil(g.nuevas/2):0;
+  const p360Pct=p360SoftGoal>0?Math.min(100,Math.round(p360Total/p360SoftGoal*100)):null;
+  const p360Clr=p360Pct===null?'#0369a1':p360Pct>=100?'#00b884':p360Pct>=60?'#ffb800':'#ff3b30';
+  html+=`<div style="margin:0 0 10px;padding:0 14px">
+    <div style="display:flex;align-items:center;margin-bottom:3px">
+      <span style="font-size:10px;font-weight:800">🛡 P360</span>
+      <span style="font-size:9px;color:var(--muted);margin-left:auto">${p360Total}${p360SoftGoal>0?' / obj. '+p360SoftGoal+' ('+voiceTotal+' Voice)':' vendidos'}</span>
+    </div>
+    ${p360SoftGoal>0?`<div style="background:#f0f0f5;border-radius:6px;height:6px;overflow:hidden"><div style="height:6px;border-radius:6px;background:${p360Clr};width:${p360Pct}%"></div></div>`
+    :`<div style="display:inline-block;background:#e0f2fe;color:#0369a1;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px">${p360Total} vendidos este mes</div>`}
+  </div>`;
   // AI Coach section — personalizado con Gemini
   const tipId='aitip-'+rep.id+'-'+Math.random().toString(36).slice(2,7);
   html+=`<div id="${tipId}" style="margin:4px 0 12px;padding:10px 14px;background:linear-gradient(135deg,#fff0f8,#fce4f3);border-left:3px solid #e20074;border-radius:0 10px 10px 0;min-height:44px">
@@ -6278,7 +6292,7 @@ function buildRepTrendCard(rep,sales,goals,cm,showName){
 async function fetchAITip(ctx){
   try{
     const GKEY='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
-    const prompt='Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores. Analiza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas.\nContexto: '+ctx;
+    const prompt='Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores. REGLAS P360: el campo P360 en el contexto es el conteo REAL de protecciones vendidas este mes. Un buen ratio es 1 P360 por cada 2 líneas Voice nuevas. Si el ratio ya es bueno (>= objetivo) NO menciones P360. Solo menciona P360 si el ratio está bajo. Analiza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas.\nContexto: '+ctx;
     const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+GKEY},
@@ -6299,22 +6313,24 @@ function buildTrendCtx(sales,goals,repId,cm,name){
   const today=todayKey();
   const todaySales=sales.filter(s=>s.date===today);
   const todayGP=todaySales.reduce((a,s)=>a+saleGP(s),0);
-  const p360Count=sales.reduce((a,s)=>a+(s.txns||[]).filter(t=>t.p360).length,0);
+  const p360Count=sales.reduce((a,s)=>a+(parseInt(s.p360)||0),0);
   const accs=calcPace(sales,g.acc||0,mAccs);
   const d=db();
   const allProsp=(d.prospectos||[]).filter(p=>p.repId===repId&&p.status!=='done');
   const dueProsp=allProsp.filter(p=>p.reminder&&p.reminder<=today);
   const allFUs=(d.followups||[]).filter(f=>f.repId===repId&&!f.done);
   const dueFUs=allFUs.filter(f=>f.reminder&&f.reminder<=today);
+  const voiceActual=Math.round(voice.actual);
+  const p360SoftGoal=g.nuevas>0?Math.ceil(g.nuevas/2):0;
   let ctx=`Vendedor: ${name}. `;
   ctx+=`Día ${gp.dayOfMonth} de ${gp.daysInMonth} (${gp.daysLeft} días restantes). `;
   ctx+=`GP: $${Math.round(gp.actual)} de $${Math.round(gp.goal)} meta (${gp.pacePct}% al ritmo actual, proyecta $${Math.round(gp.pace)}). `;
   ctx+=`Necesita $${gp.daysLeft>0?Math.ceil(gp.remaining/gp.daysLeft):0}/día para lograr la meta. `;
   ctx+=`Hoy lleva $${Math.round(todayGP)} en GP. `;
-  if(g.nuevas>0)ctx+=`Voice: ${Math.round(voice.actual)}/${g.nuevas} líneas nuevas. `;
+  if(g.nuevas>0)ctx+=`Voice: ${voiceActual}/${g.nuevas} líneas nuevas. `;
   if(g.bts>0)ctx+=`BTS: ${Math.round(bts.actual)}/${g.bts}. `;
   if(g.hsi>0)ctx+=`HSI: ${Math.round(hsi.actual)}/${g.hsi}. `;
-  ctx+=`P360: ${p360Count} vendidos este mes. `;
+  ctx+=`P360: ${p360Count} vendidos este mes${p360SoftGoal>0?` (objetivo recomendado: ${p360SoftGoal} para ${g.nuevas} líneas, ratio 1 por cada 2 líneas)`:''}. `;
   if(g.acc>0)ctx+=`Accesorios: $${Math.round(accs.actual)} de $${g.acc} meta. `;
   if(dueProsp.length>0)ctx+=`PROSPECTOS PARA LLAMAR HOY (${dueProsp.length}): ${dueProsp.slice(0,3).map(p=>`${p.name||'Sin nombre'}${p.interest?' interesado en '+p.interest:''}`).join('; ')}. `;
   else if(allProsp.length>0)ctx+=`Pipeline: ${allProsp.length} prospectos activos sin llamada pendiente hoy. `;
@@ -6794,7 +6810,8 @@ async function startTrivia(){
     +'</div>';
   var FACTS='HECHOS CORRECTOS (obligatorio respetarlos): BEYOND es el plan MAS premium y completo de T-Mobile — incluye todo de MORE mas beneficios adicionales. MORE es el plan intermedio. iPhone 17 Pro Max usa chip A19 Pro, pantalla 6.9 pulgadas, triple camara 48MP con zoom optico 5x, cuerpo de titanio. iPhone 17 Air es el iPhone mas delgado de la historia (5.5mm), chip A18, pantalla 6.6 pulgadas. Galaxy S26 Ultra usa Snapdragon 8 Elite 2, camara principal 200MP, S Pen integrado, 12GB RAM. Galaxy S26 usa Snapdragon 8 Elite 2, camara 50MP. P360 cubre: pantalla rota (reemplazo mismo dia), perdida, robo, dano por agua, McAfee Security, AppleCare+ en iPhones elegibles. HSI es internet 5G para el hogar, sin tecnico, sin contrato. SyncUP Tracker es localizador GPS para carros, mascotas, mochilas.';
   var TOPICS='Elige al azar entre estos temas para las 5 preguntas de T-Mobile (NO uses siempre los mismos): specs de camara, chip/procesador, RAM o storage de un telefono especifico; diferencias entre planes MORE y BEYOND; que incluye P360; como funciona HSI; que es SyncUP Tracker; comparacion de modelos Samsung vs iPhone; wearables Apple Watch vs Galaxy Watch; tablets disponibles; trade-in; cual telefono tiene mejor camara segun specs.';
-  var prompt='Genera exactamente 7 preguntas de trivia EN ESPANOL. MEZCLA EL ORDEN — las preguntas de Puerto Rico y musica pueden aparecer en cualquier posicion (no siempre al final). Distribucion: 5 preguntas sobre T-Mobile (usa '+TOPICS+'), 1 pregunta de cultura/historia/gastronomia/geografia de Puerto Rico (NO tecnologia), 1 pregunta de musica de Puerto Rico (reggaeton, salsa, artistas como Bad Bunny, Daddy Yankee, Ozuna, Anuel AA, Karol G, Ivy Queen, Marc Anthony, Celia Cruz). '+FACTS+' Haz 2-3 preguntas DIFICILES con specs tecnicos especificos. Devuelve SOLO el JSON array sin markdown. Formato: [{"q":"texto","opts":["A","B","C","D"],"ans":0,"cat":"tmobile"}] donde ans es indice 0-3 y cat es tmobile/pr/music.';
+  var SALES_SCENARIOS='Escenarios de venta posibles (elige uno al azar): cliente dice "lo voy a pensar" antes de salir; cliente pide descuento que no puedes dar; cliente compara tu precio con otra tienda; cliente tiene upgrade disponible pero dice que su telefono funciona bien; cliente entra solo a pagar su bill; cliente trae un telefono roto y no tiene proteccion; cliente quiere el ultimo iPhone pero su credito no aplica; cliente esta insatisfecho con su plan actual.';
+  var prompt='Genera exactamente 7 preguntas de trivia EN ESPANOL. MEZCLA EL ORDEN — las preguntas de Puerto Rico y escenarios pueden aparecer en cualquier posicion. Distribucion: 5 preguntas sobre T-Mobile (usa '+TOPICS+'), 1 pregunta sobre Puerto Rico (incluye variedad: historia, gastronomia, pueblos, playas, rios, municipios, cultura, personajes historicos, monumentos, fiestas patronales — NO solo musica), 1 pregunta de escenario de venta (usa '+SALES_SCENARIOS+' — pregunta que accion seria la MAS CORRECTA, con 4 opciones plausibles). '+FACTS+' Haz 2-3 preguntas DIFICILES con specs tecnicos especificos. Devuelve SOLO el JSON array sin markdown. Formato: [{"q":"texto","opts":["A","B","C","D"],"ans":0,"cat":"tmobile"}] donde ans es indice 0-3 y cat es tmobile/pr/sales.';
   var qs=null;
   try{
     var gk='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
@@ -6816,8 +6833,8 @@ async function startTrivia(){
       {q:'¿Qué chip usa el iPhone 17 Pro Max?',opts:['A18 Pro','A17 Pro','A19 Pro','M3'],ans:2,cat:'tmobile'},
       {q:'¿Qué característica hace único al iPhone 17 Air?',opts:['Tiene S Pen','Es el iPhone más delgado (5.5mm)','Tiene 200MP de cámara','Tiene 16GB de RAM'],ans:1,cat:'tmobile'},
       {q:'¿Qué cubre Protection 360 además de pantalla rota?',opts:['Solo daño por agua','Pérdida, robo, daño por agua y McAfee Security','Solo robo','Solo garantía del fabricante'],ans:1,cat:'tmobile'},
-      {q:'¿En qué año fue fundada la ciudad de San Juan, Puerto Rico?',opts:['1508','1521','1493','1550'],ans:1,cat:'pr'},
-      {q:'¿Cuál artista de Puerto Rico tiene el álbum más vendido del reggaetón?',opts:['Ozuna','Anuel AA','Daddy Yankee — Barrio Fino','Bad Bunny'],ans:2,cat:'music'}
+      {q:'¿Cuál es el río más largo de Puerto Rico?',opts:['Río Camuy','Río Grande de Loíza','Río La Plata','Río Grande de Arecibo'],ans:1,cat:'pr'},
+      {q:'Un cliente dice "lo voy a pensar" y se dirige a la puerta. ¿Cuál es la mejor acción?',opts:['Dejarlo ir sin decir nada','Preguntarle qué duda específica le impide decidir hoy','Bajarle el precio inmediatamente','Llamarlo al día siguiente'],ans:1,cat:'sales'}
     ];
   }
   TRIVIA_STATE={questions:qs,current:0,score:0,timer:null,startTime:0};
@@ -6829,8 +6846,8 @@ function showTriviaQuestion(){
   var s=TRIVIA_STATE;
   var q=s.questions[s.current];
   var body=_triviaContainer();
-  var isBonus=q.cat==='pr'||q.cat==='music';
-  var catLabel=q.cat==='pr'?'🇵🇷 Puerto Rico':q.cat==='music'?'🎵 Música PR':'📱 T-Mobile';
+  var isBonus=q.cat==='pr'||q.cat==='music'||q.cat==='sales';
+  var catLabel=q.cat==='pr'?'🇵🇷 Puerto Rico':q.cat==='music'?'🎵 Música PR':q.cat==='sales'?'💼 Escenario de Venta':'📱 T-Mobile';
   body.innerHTML='<div style="padding:16px;max-width:480px;margin:0 auto">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
     +'<div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase">Pregunta '+(s.current+1)+' / '+s.questions.length+'</div>'
@@ -6866,7 +6883,7 @@ function answerTrivia(idx){
   var q=s.questions[s.current];
   if(s.timer)clearInterval(s.timer);
   var elapsed=(Date.now()-s.startTime)/1000;
-  var isBonus=q.cat==='pr'||q.cat==='music';
+  var isBonus=q.cat==='pr'||q.cat==='music'||q.cat==='sales';
   var base=isBonus?150:100;
   var correct=idx===q.ans;
   if(correct)s.score+=base+Math.round(Math.max(0,(15-elapsed)/15)*50);
