@@ -6015,38 +6015,38 @@ async function showMotivationPopup(){
   document.body.appendChild(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
 
-  // Si es modo IA, contenido educativo/ventas via Gemini
+  // Si es modo IA, tip de ventas concreto via Gemini
   if(modeKey==='ai'){
     try{
       const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
       const AI_TOPICS=[
-        'Dame UN tip de cierre de ventas específico y accionable para un vendedor de T-Mobile hoy.',
-        'Explica en 2-3 oraciones por qué el iPhone 17 Pro es mejor opción que el S26 Ultra para un cliente que viene de iPhone.',
-        'Dame la ventaja competitiva más fuerte de T-Mobile vs AT&T y Verizon en 2025-2026 para usar con un cliente indeciso.',
-        'Explica cómo vender HSI (Home Internet) a un cliente que ya tiene internet en casa. Objeción y respuesta concreta.',
-        'Dame un pitch de 2 oraciones para vender Protection 360 justo después de activar un iPhone 17.',
-        'Explica las diferencias clave entre el plan MORE y BEYOND de T-Mobile para saber cuál recomendar.',
-        'Dame una técnica concreta para hacer upsell de accesorios en cada venta de teléfono.',
-        'Cómo identificar si un cliente es candidato para HSI y cómo abrir esa conversación naturalmente.',
-        'Dame el mejor argumento para convencer a un cliente Android de pasarse al iPhone 17 Air.',
-        'Explica qué es Galaxy AI 2.0 en el S26 y cómo demostrarlo en tienda para cerrar la venta.',
-        'Dame una técnica de manejo de objeciones cuando el cliente dice que el precio está muy alto.',
-        'Cómo vender el SyncUP Tracker a familias con hijos o clientes con carro. Pitch de 2 oraciones.',
-        'Novedades más importantes de T-Mobile en 2025-2026 que un vendedor debe saber para diferenciarse.',
-        'Cómo hacer un trade-in efectivo: qué decirle al cliente para que traiga su teléfono viejo.',
-        'Dame el mejor pitch para vender el Samsung Galaxy S26 a un cliente que lleva años con iPhone.'
+        {label:'Cierre',q:'Escribe una frase exacta de cierre por asuncion que un vendedor T-Mobile puede decir hoy. Solo la frase, nada mas.'},
+        {label:'iPhone 17 Pro',q:'En 2 oraciones: por que un cliente de iPhone 12 o 13 deberia subir al iPhone 17 Pro ahora. Solo datos reales del chip A19 Pro y Apple Intelligence.'},
+        {label:'iPhone 17 Air',q:'En 2 oraciones: que hace unico al iPhone 17 Air y para que tipo de cliente es ideal. Solo hechos: 5.5mm de grosor, chip A19, Dynamic Island.'},
+        {label:'Galaxy S26 Ultra',q:'En 2 oraciones: por que el Galaxy S26 Ultra con Snapdragon 8 Elite Gen 2 y Galaxy AI 2.0 es la mejor opcion para un cliente power user Android.'},
+        {label:'HSI',q:'Escribe exactamente que decirle a un cliente cuando dices: como tienes el internet en casa? Una respuesta de 2 oraciones que lleve a vender T-Mobile Home Internet sin inventar precios.'},
+        {label:'P360',q:'Escribe el pitch exacto de 2 oraciones para vender Protection 360 despues de activar cualquier iPhone 17. Menciona el costo de reparar pantalla sin seguro vs con P360.'},
+        {label:'MORE vs BEYOND',q:'En 2 oraciones explica la diferencia entre plan MORE y plan BEYOND de T-Mobile. Solo lo que esta incluido en cada uno, sin inventar precios.'},
+        {label:'Objecion precio',q:'El cliente dice: esta muy caro. Escribe exactamente que responder en 2 oraciones para redirigir a valor, no a precio.'},
+        {label:'Trade-in',q:'En 2 oraciones: como mencionarle el trade-in a un cliente para que traiga su telefono viejo la proxima vez. Solo la frase exacta.'},
+        {label:'SyncUP Tracker',q:'En 2 oraciones: para quien es el SyncUP Tracker y la frase exacta para ofrecerlo a un cliente con hijos o carro.'},
+        {label:'Galaxy Watch 8',q:'En 2 oraciones: por que ofrecer el Galaxy Watch 8 a cualquier cliente que compra un S26. Solo hechos del producto.'},
+        {label:'Apple Watch SE 3',q:'En 2 oraciones: por que el Apple Watch SE 3 es facil de vender a cualquier cliente de iPhone como BTS economico.'},
+        {label:'T-Mobile vs AT&T',q:'Dame la ventaja mas fuerte y real de T-Mobile sobre AT&T en cobertura o precio en 2025. Una sola oracion concreta sin inventar estadisticas.'},
+        {label:'Accesorios upsell',q:'Escribe la pregunta exacta que debe hacer un vendedor para abrir la conversacion de accesorios justo al activar un telefono nuevo.'},
+        {label:'Samsung Tab A11+',q:'En 2 oraciones: como vender el Samsung Galaxy Tab A11+ como BTS a un cliente que compra un S26. Por que tiene sentido activarla.'}
       ];
       const topic=AI_TOPICS[Math.floor(Math.random()*AI_TOPICS.length)];
-      const aiPrompt=`Eres experto en ventas T-Mobile 2025-2026. DISPOSITIVOS VIGENTES: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Wearables: Apple Watch Series 10, Apple Watch SE 3, Galaxy Watch 8, Galaxy Watch Ultra. Tablets: Samsung Tab A11+, iPad A16. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores, S24, S25 estandar.\n${topic}\nResponde directo, sin introduccion, sin markdown, sin asteriscos. Maximo 60 palabras.`;
+      const aiPrompt=`Eres un experto en productos T-Mobile. REGLAS ESTRICTAS: NO inventes nombres de personas. NO inventes precios especificos a menos que los conozcas con certeza. NO combines productos que no tienen relacion (HSI no se combina con relojes). Responde SOLO lo que se te pregunta, sin introduccion, sin markdown, sin asteriscos, en español.\n\nPregunta: ${topic.q}`;
       const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:200,temperature:0.9,thinkingConfig:{thinkingBudget:0}}})
+        body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:150,temperature:0.3,thinkingConfig:{thinkingBudget:0}}})
       });
       if(r.ok){
         const data=await r.json();
         const msg=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim().replace(/\*\*/g,'').replace(/\*/g,'').replace(/#+\s?/g,'');
         const elAI=document.getElementById('mot-ai-body');
-        if(elAI&&msg) elAI.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg}</div>`;
+        if(elAI&&msg) elAI.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">💡 ${topic.label}</div><div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg}</div>`;
       }
     }catch(e){}
   }
