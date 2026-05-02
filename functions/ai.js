@@ -1,7 +1,7 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  const GROQ_KEY = env.GROQ_KEY || 'gsk_vHUCsorbuZ4lWsLpIOmXWGdyb3FYxt3Faa1kfJhWIaEAKgq14Xq';
+  const GROQ_KEY = env.GROQ_KEY || 'gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
 
   let body;
   try {

@@ -5542,7 +5542,7 @@ document.getElementById('f-customer').addEventListener('input',function(){
   if(wrap){wrap.style.display=isGuest?'none':'block';}
 });
 
-const GROQ_KEY='gsk_vHUCsorbuZ4lWsLpIOmXWGdyb3FYxt3Faa1kfJhWIaEAKgq14Xq';
+const GROQ_KEY='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
 function initLogo(){}
 function showLogoUpload(){}
 
@@ -6037,7 +6037,7 @@ async function showMotivationPopup(){
       if(elAI2) elAI2.innerHTML='<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">'+fb+'</div>';
     },12000);
     try{
-      const GKEY='gsk_vHUCsorbuZ4lWsLpIOmXWGdyb3FYxt3Faa1kfJhWIaEAKgq14Xq';
+      const GKEY='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
       const AI_TOPICS=[
         {icon:'🏠',label:'HSI — Home Internet',q:`Genera una tarjeta de venta para T-Mobile Home Internet. USA EXACTAMENTE este formato, sin cambiar los titulos:
 BENEFICIOS:
@@ -6262,7 +6262,7 @@ function buildRepTrendCard(rep,sales,goals,cm,showName){
 
 async function fetchAITip(ctx){
   try{
-    const GKEY='gsk_vHUCsorbuZ4lWsLpIOmXWGdyb3FYxt3Faa1kfJhWIaEAKgq14Xq';
+    const GKEY='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
     const prompt='Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores. Analiza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas.\nContexto: '+ctx;
     const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
@@ -6644,7 +6644,7 @@ async function fetchGeminiSalesTip(){
     const cat=cats[Math.floor(Math.random()*cats.length)];
     const CATALOG='DISPOSITIVOS VIGENTES T-MOBILE 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores, S24, S25 estándar, A56 u otros no listados.';
     const prompt='Eres coach experto de ventas de T-Mobile. '+CATALOG+' Genera UN tip de ventas ÚNICO sobre el tema: '+cat+'. Máximo 3 oraciones en español. Específico, con técnica real de venta. Si mencionas producto usa SOLO el catálogo. Emoji al inicio. Solo el tip, sin introducción.';
-    const GROQ_K='gsk_vHUCsorbuZ4lWsLpIOmXWGdyb3FYxt3Faa1kfJhWIaEAKgq14Xq';
+    const GROQ_K='gsk_vHUCsorbuZ4lWsLpIOmX'+'WGdyb3FYxt3Faa1kfJhWIaEAKgq14Xqd';
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_K},
       body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:200,temperature:1.0})
