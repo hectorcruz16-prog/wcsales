@@ -6019,10 +6019,23 @@ async function showMotivationPopup(){
   if(modeKey==='ai'){
     var elAI2=document.getElementById('mot-ai-body');
     var aiTimerDone=false;
+    var AI_FALLBACKS=[
+      '🏠 Pregunta a cada cliente: ¿Cómo tienes el internet en casa? — abre la puerta al HSI.',
+      '🛡️ P360 cubre pantalla rota ilimitado. Pregunta: ¿Tienes protección en tu teléfono ahora mismo?',
+      '🔄 Trade-in: un cliente con teléfono viejo es una oportunidad. Pregunta el modelo que tiene.',
+      '📱 Al cerrar una línea nueva, siempre ofrece el accesorio: cargador, case o AirPods.',
+      '⌚ ¿Tiene teléfono T-Mobile? Ofrece Apple Watch SE 3 o Galaxy Watch — se añade a la cuenta fácil.',
+      '💬 Objeción "está muy caro": muestra el trade-in primero, luego el precio final.',
+      '🌐 MORE vs BEYOND: si el cliente viaja o usa mucho datos, BEYOND se vende solo.',
+      '📍 SyncUP Tracker: ideal para clientes con niños, mascotas o carros. Pregunta si tienen algo que rastrear.',
+      '🎯 Follow-up = ventas. Llama a un cliente de esta semana y pregunta cómo le va con el teléfono.',
+      '🚀 El mejor momento para vender P360 es justo después del upgrade — el cliente ya dijo que sí.'
+    ];
     var aiTimer=setTimeout(function(){
       aiTimerDone=true;
-      if(elAI2) elAI2.innerHTML='<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">Tip: Pregunta a cada cliente: Como tienes el internet en casa? — abre la puerta al HSI.</div>';
-    },7000);
+      var fb=AI_FALLBACKS[Math.floor(Math.random()*AI_FALLBACKS.length)];
+      if(elAI2) elAI2.innerHTML='<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">'+fb+'</div>';
+    },12000);
     try{
       const GKEY='AIzaSyCdRIpAcAidXJkc8CTimDIOQolBadjD4m_';
       const AI_TOPICS=[
