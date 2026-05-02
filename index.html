@@ -6121,7 +6121,15 @@ Sin markdown. Sin asteriscos.`}
         const elAI=document.getElementById('mot-ai-body');
         if(elAI&&formatted) elAI.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${topic.icon} ${topic.label}</div><div style="font-size:12px;font-weight:500;line-height:1.5;color:#222">${formatted}</div>`;
       }
-    }catch(e){}
+    }catch(e){
+      const elAI=document.getElementById('mot-ai-body');
+      if(elAI) elAI.innerHTML=`<div style="font-size:12px;font-weight:600;color:#555;line-height:1.6">💡 Tip: Pregunta siempre "¿cómo tienes el internet en casa?" — abre la puerta al HSI en cada visita.</div>`;
+    }
+    // Timeout fallback — si shimmer sigue en 9s, mostrar tip estatico
+    setTimeout(()=>{
+      const elAI=document.getElementById('mot-ai-body');
+      if(elAI&&elAI.querySelector('.shimmer-line'))elAI.innerHTML=`<div style="font-size:12px;font-weight:600;color:#555;line-height:1.6">💡 Tip: Después de activar cualquier teléfono nuevo, pregunta: "¿Te pongo el seguro para que cualquier daño quede cubierto?" — así abres P360 sin presión.</div>`;
+    },9000);
   }
 
   // Si es modo phone, cargar contenido IA async
