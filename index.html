@@ -704,6 +704,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
       <button class="mt" id="mmt-mis-ventas" onclick="mgrTab('mis-ventas')"><span class="mt-icon">💳</span>Mis Ventas</button>
       <button class="mt" id="mmt-cuota" onclick="mgrTab('cuota')"><span class="mt-icon">🎯</span>Cuotas</button>
       <button class="mt" id="mmt-trivia" onclick="mgrTab('trivia')"><span class="mt-icon">🎮</span>Trivia</button>
+      <button class="mt" id="mmt-reportes" onclick="mgrTab('reportes')"><span class="mt-icon">📊</span>Reportes</button>
     </div>
   </div>
   <div class="panes-host">
@@ -748,6 +749,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
     <div class="pane" id="mp-mis-ventas"><div id="mgr-mis-ventas-body"></div></div>
     <div class="pane" id="mp-trend"><div id="trend-mgr-body"></div></div>
     <div class="pane" id="mp-trivia"><div id="trivia-body-mgr"></div></div>
+    <div class="pane" id="mp-reportes"><div id="report-mgr-body"></div></div>
     <div class="pane" id="mp-resultados">
       <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 16px 0">
@@ -798,6 +800,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
       <button class="mt" id="amt-mis-ventas" onclick="admTab('mis-ventas')"><span class="mt-icon">💳</span>Mis Ventas</button>
       <button class="mt" id="amt-prospectos" onclick="admTab('prospectos')"><span class="mt-icon">👥</span>Prospectos</button>
       <button class="mt" id="amt-trivia" onclick="admTab('trivia')"><span class="mt-icon">🎮</span>Trivia</button>
+      <button class="mt" id="amt-reportes" onclick="admTab('reportes')"><span class="mt-icon">📊</span>Reportes</button>
     </div>
   </div>
   <div class="panes-host">
@@ -841,6 +844,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
     <div class="pane" id="ap-mis-ventas"><div id="adm-mis-ventas-body"></div></div>
     <div class="pane" id="ap-trend"><div id="trend-adm-body"></div></div>
     <div class="pane" id="ap-trivia"><div id="trivia-body-adm"></div></div>
+    <div class="pane" id="ap-reportes"><div id="report-adm-body"></div></div>
     <div class="pane" id="ap-resultados">
       <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 16px 0">
@@ -1408,7 +1412,7 @@ function selTab(tab){
   if(tab==='trivia')renderTrivia('trivia-body');
 }
 function mgrTab(tab){
-  ['ventas','equipo','concursos','tareas','resultados','cuota','prospectos','followups','trend','mis-ventas','trivia'].forEach(t=>{
+  ['ventas','equipo','concursos','tareas','resultados','cuota','prospectos','followups','trend','mis-ventas','trivia','reportes'].forEach(t=>{
     const b=document.getElementById('mmt-'+t);const p=document.getElementById('mp-'+t);
     if(b)b.classList.toggle('on',t===tab);if(p)p.classList.toggle('on',t===tab);
   });
@@ -1426,9 +1430,10 @@ function mgrTab(tab){
   if(tab==='mis-ventas')renderMisVentasTab('mgr');
   if(tab==='trend')renderTrendMgr();
   if(tab==='trivia')renderTrivia('trivia-body-mgr');
+  if(tab==='reportes')renderReportTab('mgr');
 }
 function admTab(tab){
-  ['resumen','tiendas','concursos','catalogo','tareas','resultados','usuarios','cuota','prospectos','trend','mis-ventas','trivia'].forEach(t=>{
+  ['resumen','tiendas','concursos','catalogo','tareas','resultados','usuarios','cuota','prospectos','trend','mis-ventas','trivia','reportes'].forEach(t=>{
     const b=document.getElementById('amt-'+t);const p=document.getElementById('ap-'+t);
     if(b)b.classList.toggle('on',t===tab);if(p)p.classList.toggle('on',t===tab);
   });
@@ -1444,6 +1449,7 @@ function admTab(tab){
   if(tab==='mis-ventas')renderMisVentasTab('adm');
   if(tab==='trend')renderTrendAdm();
   if(tab==='trivia')renderTrivia('trivia-body-adm');
+  if(tab==='reportes')renderReportTab('adm');
 }
 var _mgrMonth = ''; // empty = curMonth
 
@@ -6976,6 +6982,282 @@ async function endTrivia(){
     +'<div style="font-size:11px;font-weight:800;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;text-align:left">🏆 Ranking de hoy · Todas las tiendas</div>'
     +lbHtml
     +'</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// REPORTES — Visual HTML report + email
+// ══════════════════════════════════════════════════════════════════════
+
+var _reportPeriod='month';
+
+function renderReportTab(role){
+  var elId=role==='mgr'?'report-mgr-body':'report-adm-body';
+  var el=document.getElementById(elId);
+  if(!el)return;
+  el.innerHTML='<div style="padding:16px">'
+    +'<div style="font-size:18px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">📊 Reportes</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:16px">Genera reportes visuales para reuniones</div>'
+    // Period selector
+    +'<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">'
+    +['month','lastmonth','week'].map(function(p){
+      var lbl=p==='month'?'Este mes':p==='lastmonth'?'Mes anterior':'Esta semana';
+      return '<button onclick="setReportPeriod(\''+p+'\',\''+role+'\')" id="rpbtn-'+p+'" style="flex:1;min-width:90px;padding:9px 6px;border-radius:10px;border:2px solid '+(p===_reportPeriod?'var(--m)':'var(--line)')+';background:'+(p===_reportPeriod?'var(--m)':'var(--card)')+';color:'+(p===_reportPeriod?'#fff':'var(--ink)')+';font-size:12px;font-weight:800;cursor:pointer">'+lbl+'</button>';
+    }).join('')
+    +'</div>'
+    // Mini KPI preview
+    +'<div id="rpt-kpi-'+role+'" style="margin-bottom:16px"></div>'
+    // Action buttons
+    +'<div style="display:flex;gap:10px;margin-bottom:20px">'
+    +'<button onclick="openReportWindow(\''+role+'\')" style="flex:1;padding:13px;background:var(--m);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer">🖥 Ver reporte completo</button>'
+    +'</div>'
+    // Email section
+    +'<div style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px">'
+    +'<div style="font-size:13px;font-weight:800;margin-bottom:10px">✉️ Enviar por email</div>'
+    +'<textarea id="rpt-emails-'+role+'" placeholder="emails separados por coma&#10;ej: manager@tienda.com, director@empresa.com" style="width:100%;height:72px;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:13px;font-family:Figtree,sans-serif;resize:none;background:var(--bg);color:var(--ink)"></textarea>'
+    +'<button onclick="sendReportEmail(\''+role+'\')" style="width:100%;margin-top:10px;padding:12px;background:#111;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📤 Enviar reporte</button>'
+    +'</div>'
+    +'</div>';
+  _renderReportKPI(role);
+}
+
+function setReportPeriod(period,role){
+  _reportPeriod=period;
+  renderReportTab(role);
+}
+
+function _reportData(role){
+  var u=me();var d=db();
+  var range=_getDateRange(_reportPeriod);
+  var sellers,sales,scopeLabel,isAdm=role==='adm';
+  if(isAdm){
+    sellers=d.users.filter(function(x){return(x.role==='seller'||x.role==='ram')&&x.active!==false;});
+    sales=_filterByPeriod(d.sales,range);
+    scopeLabel='Todas las Tiendas';
+  } else {
+    sellers=d.users.filter(function(x){return(x.role==='seller'||x.role==='ram')&&x.storeCode===u.storeCode&&x.active!==false;});
+    sales=_filterByPeriod(d.sales.filter(function(s){return s.storeCode===u.storeCode;}),range);
+    scopeLabel=(STORES[u.storeCode]&&STORES[u.storeCode].name)||u.storeCode;
+  }
+  var periodLabel=_reportPeriod==='month'?'Este mes':_reportPeriod==='lastmonth'?'Mes anterior':'Esta semana';
+  var cm=range.month||curMonth();
+  // Per seller stats
+  var repRows=sellers.map(function(rep){
+    var rs=sales.filter(function(s){return s.repId===rep.id;});
+    var gp=rs.reduce(function(a,s){return a+saleGP(s);},0);
+    var voice=rs.reduce(function(a,s){return a+mVoice(s);},0);
+    var bts=rs.reduce(function(a,s){return a+mBTS(s);},0);
+    var hsi=rs.reduce(function(a,s){return a+mHSI(s);},0);
+    var p360=rs.reduce(function(a,s){return a+(parseInt(s.p360)||0);},0);
+    var accs=rs.reduce(function(a,s){return a+mAccs(s);},0);
+    var comm=calcAll(rs).total;
+    var g=getGoalForMonth(d,rep.id,cm);
+    var goalGP=g.gp||8000;
+    var storeName=(STORES[rep.storeCode]&&STORES[rep.storeCode].name)||rep.storeCode||'—';
+    return{name:rep.name,store:storeName,gp:gp,voice:voice,bts:bts,hsi:hsi,p360:p360,accs:accs,comm:comm,goalGP:goalGP,pct:goalGP>0?Math.round(gp/goalGP*100):null};
+  }).sort(function(a,b){return b.gp-a.gp;});
+  // Per store stats (admin only)
+  var storeRows=isAdm?Object.keys(STORES).map(function(code){
+    var ss=sales.filter(function(s){return s.storeCode===code;});
+    return{name:STORES[code].name,code:code,gp:ss.reduce(function(a,s){return a+saleGP(s);},0),voice:ss.reduce(function(a,s){return a+mVoice(s);},0),p360:ss.reduce(function(a,s){return a+(parseInt(s.p360)||0);},0),accs:ss.reduce(function(a,s){return a+mAccs(s);},0)};
+  }).sort(function(a,b){return b.gp-a.gp;}):[];
+  // Totals
+  var totalGP=sales.reduce(function(a,s){return a+saleGP(s);},0);
+  var totalVoice=sales.reduce(function(a,s){return a+mVoice(s);},0);
+  var totalBTS=sales.reduce(function(a,s){return a+mBTS(s);},0);
+  var totalHSI=sales.reduce(function(a,s){return a+mHSI(s);},0);
+  var totalP360=sales.reduce(function(a,s){return a+(parseInt(s.p360)||0);},0);
+  var totalAccs=sales.reduce(function(a,s){return a+mAccs(s);},0);
+  // Daily GP
+  var dayMap={};
+  sales.forEach(function(s){
+    var dt=s.date||'';if(!dt)return;
+    if(!dayMap[dt])dayMap[dt]=0;
+    dayMap[dt]+=saleGP(s);
+  });
+  var days=Object.keys(dayMap).sort();
+  return{scopeLabel:scopeLabel,periodLabel:periodLabel,repRows:repRows,storeRows:storeRows,totalGP:totalGP,totalVoice:totalVoice,totalBTS:totalBTS,totalHSI:totalHSI,totalP360:totalP360,totalAccs:totalAccs,days:days,dayMap:dayMap,isAdm:isAdm};
+}
+
+function _renderReportKPI(role){
+  var el=document.getElementById('rpt-kpi-'+role);
+  if(!el)return;
+  var rd=_reportData(role);
+  var kpis=[
+    {icon:'💰',label:'GP Total',val:'$'+Math.round(rd.totalGP).toLocaleString('en-US')},
+    {icon:'📱',label:'Voice',val:rd.totalVoice},
+    {icon:'💼',label:'BTS',val:rd.totalBTS},
+    {icon:'🌐',label:'HSI',val:rd.totalHSI},
+    {icon:'🛡',label:'P360',val:rd.totalP360},
+    {icon:'🎧',label:'Accs',val:'$'+Math.round(rd.totalAccs).toLocaleString('en-US')}
+  ];
+  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'
+    +kpis.map(function(k){
+      return '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center">'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:4px">'+k.icon+' '+k.label+'</div>'
+        +'<div style="font-size:17px;font-weight:900;color:var(--m)">'+k.val+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+function openReportWindow(role){
+  var rd=_reportData(role);
+  var html=buildReportHTML(rd);
+  var win=window.open('','_blank');
+  if(!win){toast('Permite ventanas emergentes para ver el reporte','err');return;}
+  win.document.write(html);
+  win.document.close();
+}
+
+function buildReportHTML(rd){
+  var maxGP=Math.max.apply(null,rd.repRows.map(function(r){return r.gp;})||[1])||1;
+  var maxStoreGP=rd.isAdm?(Math.max.apply(null,rd.storeRows.map(function(r){return r.gp;})||[1])||1):1;
+  var repNames=JSON.stringify(rd.repRows.map(function(r){return r.name.split(' ')[0];}));
+  var repGPs=JSON.stringify(rd.repRows.map(function(r){return Math.round(r.gp);}));
+  var repVoice=JSON.stringify(rd.repRows.map(function(r){return r.voice;}));
+  var storeNames=JSON.stringify(rd.storeRows.map(function(r){return r.name;}));
+  var storeGPs=JSON.stringify(rd.storeRows.map(function(r){return Math.round(r.gp);}));
+  var dayLabels=JSON.stringify(rd.days.map(function(d){return d.substring(5);}));
+  var dayGPs=JSON.stringify(rd.days.map(function(d){return Math.round(rd.dayMap[d]);}));
+  var now=new Date().toLocaleDateString('es-PR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  var tableRows=rd.repRows.map(function(r,i){
+    var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    var pctBar=r.pct!==null?'<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#f0f0f5;border-radius:4px;height:6px;overflow:hidden"><div style="height:6px;border-radius:4px;background:'+(r.pct>=100?'#00b884':r.pct>=75?'#ffb800':'#e20074')+';width:'+Math.min(100,r.pct)+'%"></div></div><span style="font-size:11px;font-weight:700;color:'+(r.pct>=100?'#00b884':r.pct>=75?'#ffb800':'#e20074')+'">'+r.pct+'%</span></div>':'—';
+    return '<tr>'
+      +'<td style="font-weight:800">'+medal+' '+r.name+'</td>'
+      +(rd.isAdm?'<td style="color:#888">'+r.store+'</td>':'')
+      +'<td style="font-weight:900;color:#e20074">$'+Math.round(r.gp).toLocaleString('en-US')+'</td>'
+      +'<td>'+pctBar+'</td>'
+      +'<td style="text-align:center">'+r.voice+'</td>'
+      +'<td style="text-align:center">'+r.bts+'</td>'
+      +'<td style="text-align:center">'+r.hsi+'</td>'
+      +'<td style="text-align:center">'+r.p360+'</td>'
+      +'<td style="text-align:right">$'+Math.round(r.accs).toLocaleString('en-US')+'</td>'
+      +'<td style="text-align:right;color:#555">$'+Math.round(r.comm).toLocaleString('en-US')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var storeTableRows=rd.storeRows.map(function(r,i){
+    var pctBar=maxStoreGP>0?'<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#f0f0f5;border-radius:4px;height:6px;overflow:hidden"><div style="height:6px;border-radius:4px;background:#e20074;width:'+Math.round(r.gp/maxStoreGP*100)+'%"></div></div></div>':'';
+    return '<tr><td style="font-weight:800">'+(i===0?'🏆 ':'')+r.name+'</td>'
+      +'<td style="font-weight:900;color:#e20074">$'+Math.round(r.gp).toLocaleString('en-US')+'</td>'
+      +'<td>'+pctBar+'</td>'
+      +'<td style="text-align:center">'+r.voice+'</td>'
+      +'<td style="text-align:center">'+r.p360+'</td>'
+      +'<td style="text-align:right">$'+Math.round(r.accs).toLocaleString('en-US')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    +'<title>Reporte WC Sales — '+rd.scopeLabel+' — '+rd.periodLabel+'</title>'
+    +'<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Arial,sans-serif}'
+    +'body{background:#f4f5f7;color:#111}'
+    +'.header{background:linear-gradient(135deg,#c6006f,#e20074);color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:center}'
+    +'.header h1{font-size:22px;font-weight:900;letter-spacing:-.5px}'
+    +'.header .meta{text-align:right;font-size:12px;opacity:.85;line-height:1.7}'
+    +'.section{padding:20px 32px 0}'
+    +'.section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#888;margin-bottom:12px}'
+    +'.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}'
+    +'.kpi{background:#fff;border-radius:14px;padding:16px 12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}'
+    +'.kpi .val{font-size:22px;font-weight:900;color:#e20074}'
+    +'.kpi .lbl{font-size:10px;color:#999;margin-top:4px;text-transform:uppercase;font-weight:700}'
+    +'.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}'
+    +'.chart-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)}'
+    +'.chart-card.wide{grid-column:1/-1}'
+    +'.chart-card h3{font-size:13px;font-weight:800;color:#333;margin-bottom:16px}'
+    +'table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}'
+    +'thead th{background:#e20074;color:#fff;padding:11px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}'
+    +'tbody td{padding:11px 14px;font-size:13px;border-bottom:1px solid #f0f0f5}'
+    +'tbody tr:last-child td{border:none}'
+    +'tbody tr:nth-child(even) td{background:#fafafa}'
+    +'.footer{padding:24px 32px;text-align:center;font-size:11px;color:#bbb}'
+    +'.no-print{}'
+    +'@media print{'
+    +'body{background:#fff}'
+    +'.no-print{display:none!important}'
+    +'.section{padding:14px 20px 0}'
+    +'.kpi-row{grid-template-columns:repeat(6,1fr)}'
+    +'}'
+    +'</style></head><body>'
+    // Header
+    +'<div class="header"><div><h1>📊 Reporte de Ventas</h1><div style="font-size:14px;opacity:.9;margin-top:4px">'+rd.scopeLabel+' · '+rd.periodLabel+'</div></div>'
+    +'<div class="meta">'+now+'<br>WC Sales</div></div>'
+    // Print + download buttons
+    +'<div class="no-print" style="padding:16px 32px;display:flex;gap:10px">'
+    +'<button onclick="window.print()" style="padding:10px 20px;background:#e20074;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">🖨 Imprimir / Guardar PDF</button>'
+    +'<button onclick="downloadHTML()" style="padding:10px 20px;background:#111;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">⬇ Descargar HTML</button>'
+    +'</div>'
+    // KPIs
+    +'<div class="section"><div class="section-title">Resumen General</div>'
+    +'<div class="kpi-row">'
+    +'<div class="kpi"><div class="val">$'+Math.round(rd.totalGP).toLocaleString('en-US')+'</div><div class="lbl">💰 Gross Profit</div></div>'
+    +'<div class="kpi"><div class="val">'+rd.totalVoice+'</div><div class="lbl">📱 Voice</div></div>'
+    +'<div class="kpi"><div class="val">'+rd.totalBTS+'</div><div class="lbl">💼 BTS</div></div>'
+    +'<div class="kpi"><div class="val">'+rd.totalHSI+'</div><div class="lbl">🌐 HSI</div></div>'
+    +'<div class="kpi"><div class="val">'+rd.totalP360+'</div><div class="lbl">🛡 P360</div></div>'
+    +'<div class="kpi"><div class="val">$'+Math.round(rd.totalAccs).toLocaleString('en-US')+'</div><div class="lbl">🎧 Accesorios</div></div>'
+    +'</div></div>'
+    // Charts
+    +'<div class="section" style="padding-top:20px"><div class="section-title">Gráficas</div>'
+    +'<div class="charts-row">'
+    +'<div class="chart-card"><h3>💰 GP por Vendedor</h3><canvas id="chartGP" height="220"></canvas></div>'
+    +'<div class="chart-card"><h3>📱 Líneas Voice por Vendedor</h3><canvas id="chartVoice" height="220"></canvas></div>'
+    +(rd.isAdm?'<div class="chart-card"><h3>🏪 GP por Tienda</h3><canvas id="chartStore" height="160"></canvas></div>':'')
+    +'<div class="chart-card '+(rd.isAdm?'':'wide')+'"><h3>📈 Tendencia Diaria GP</h3><canvas id="chartTrend" height="160"></canvas></div>'
+    +'</div></div>'
+    // Ranking table sellers
+    +'<div class="section" style="padding-top:20px"><div class="section-title">Ranking Vendedores</div>'
+    +'<table><thead><tr>'
+    +'<th>Vendedor</th>'+(rd.isAdm?'<th>Tienda</th>':'')+'<th>GP</th><th>vs Meta</th><th>Voice</th><th>BTS</th><th>HSI</th><th>P360</th><th>Accs</th><th>Comisión</th>'
+    +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>'
+    // Stores table (admin only)
+    +(rd.isAdm?'<div class="section" style="padding-top:20px"><div class="section-title">Por Tienda</div>'
+    +'<table><thead><tr><th>Tienda</th><th>GP</th><th>Relativo</th><th>Voice</th><th>P360</th><th>Accs</th></tr></thead>'
+    +'<tbody>'+storeTableRows+'</tbody></table></div>':'')
+    +'<div class="footer">Generado por WC Sales · '+now+'</div>'
+    // Charts JS
+    +'<script>'
+    +'var magenta="#e20074",purple="#6b0080",sky="#0ea5e9",grid="rgba(0,0,0,.06)";'
+    +'var baseOpts={responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:grid},ticks:{font:{size:11,weight:"700"}}},y:{grid:{color:grid},ticks:{font:{size:11}}}}};'
+    +'new Chart(document.getElementById("chartGP"),{type:"bar",data:{labels:'+repNames+',datasets:[{data:'+repGPs+',backgroundColor:'+repGPs+'.map(function(v,i){return i===0?"'+magenta+'":"rgba(226,0,116,.35)";}),'
+    +'borderRadius:8,borderSkipped:false}]},options:Object.assign({},baseOpts,{scales:{x:{grid:{color:grid},ticks:{font:{size:11,weight:"700"}}},y:{grid:{color:grid},ticks:{font:{size:11},callback:function(v){return"$"+v.toLocaleString();}}}}})});'
+    +'new Chart(document.getElementById("chartVoice"),{type:"bar",data:{labels:'+repNames+',datasets:[{data:'+repVoice+',backgroundColor:'+repVoice+'.map(function(v,i){return i===0?"'+sky+'":"rgba(14,165,233,.35)";}),'
+    +'borderRadius:8,borderSkipped:false}]},options:baseOpts});'
+    +(rd.isAdm?'new Chart(document.getElementById("chartStore"),{type:"bar",data:{labels:'+storeNames+',datasets:[{data:'+storeGPs+',backgroundColor:"'+purple+'",borderRadius:8,borderSkipped:false}]},'
+    +'options:Object.assign({},baseOpts,{indexAxis:"y",scales:{x:{grid:{color:grid},ticks:{callback:function(v){return"$"+v.toLocaleString();}}},y:{grid:{color:grid}}}})});':'')
+    +'new Chart(document.getElementById("chartTrend"),{type:"line",data:{labels:'+dayLabels+',datasets:[{data:'+dayGPs+',borderColor:"'+magenta+'",backgroundColor:"rgba(226,0,116,.08)",fill:true,tension:.4,pointRadius:3,pointBackgroundColor:"'+magenta+'"}]},'
+    +'options:Object.assign({},baseOpts,{scales:{x:{grid:{color:grid},ticks:{font:{size:10}}},y:{grid:{color:grid},ticks:{callback:function(v){return"$"+v.toLocaleString();}}}}})});'
+    +'function downloadHTML(){'
+    +'var blob=new Blob([document.documentElement.outerHTML],{type:"text/html"});'
+    +'var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="reporte-wcsales.html";a.click();}'
+    +'<\/script>'
+    +'</body></html>';
+}
+
+async function sendReportEmail(role){
+  var emailsEl=document.getElementById('rpt-emails-'+role);
+  if(!emailsEl)return;
+  var raw=emailsEl.value.trim();
+  if(!raw){toast('Ingresa al menos un email','err');return;}
+  var emails=raw.split(/[\s,;]+/).filter(function(e){return e.includes('@');});
+  if(!emails.length){toast('Emails inválidos','err');return;}
+  var rd=_reportData(role);
+  var html=buildReportHTML(rd);
+  var subject='Reporte de Ventas — '+rd.scopeLabel+' — '+rd.periodLabel;
+  toast('Enviando reporte...');
+  try{
+    var res=await fetch('/functions/send-report',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({emails:emails,subject:subject,html:html})
+    });
+    var data=await res.json();
+    if(data.ok){toast('✓ Reporte enviado a '+emails.length+' destinatario'+(emails.length>1?'s':''));}
+    else{toast('Error al enviar: '+(data.error||'desconocido'),'err');}
+  }catch(e){toast('Error de conexión al enviar','err');}
 }
 
 </script>
