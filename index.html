@@ -5542,7 +5542,7 @@ document.getElementById('f-customer').addEventListener('input',function(){
   if(wrap){wrap.style.display=isGuest?'none':'block';}
 });
 
-const GEMINI_API_KEY='AIzaSyA1vSg3GGbxmL5XiHosdUsO8YWjdYU2WBY';
+const GEMINI_API_KEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
 function initLogo(){}
 function showLogoUpload(){}
 
@@ -6024,9 +6024,9 @@ async function showMotivationPopup(){
     if(elAI) elAI.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${fallbackMsg}</div>`;
     if(ctx){
       try{
-        const GKEY='AIzaSyA1vSg3GGbxmL5XiHosdUsO8YWjdYU2WBY';
+        const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
         const aiPrompt=`Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores.\nAnaliza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas. Máximo 80 palabras.\nContexto: ${ctx}`;
-        const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GKEY,{
+        const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:150,temperature:0.7}})
         });
@@ -6153,9 +6153,9 @@ function buildRepTrendCard(rep,sales,goals,cm,showName){
 
 async function fetchAITip(ctx){
   try{
-    const GKEY='AIzaSyA1vSg3GGbxmL5XiHosdUsO8YWjdYU2WBY';
+    const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
     const prompt='Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores. Analiza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas.\nContexto: '+ctx;
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GKEY,{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:120,temperature:0.8}})
@@ -6530,14 +6530,14 @@ function checkContestAlert(){
 // ══════════════════════════════════════════════════════════
 // GEMINI AI SALES TIPS — Dynamic popup content via AI
 async function fetchGeminiSalesTip(){
-  const GEMINI_KEY='AIzaSyA1vSg3GGbxmL5XiHosdUsO8YWjdYU2WBY';
+  const GEMINI_KEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
   try{
     const cats=['técnica de cierre','manejo de objeciones','upsell de accesorios','venta de HSI Home Internet','venta de Protection 360','planes MORE y BEYOND','apertura de conversación con cliente','follow-up post-venta','venta de wearables Apple Watch Series 10 o Galaxy Watch','venta de tablets Samsung Tab A11+ o iPad A16','uso de trade-in para cerrar la venta','motivación del equipo de ventas'];
     const cat=cats[Math.floor(Math.random()*cats.length)];
     const CATALOG='DISPOSITIVOS VIGENTES T-MOBILE 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores, S24, S25 estándar, A56 u otros no listados.';
     const prompt='Eres coach experto de ventas de T-Mobile. '+CATALOG+' Genera UN tip de ventas ÚNICO sobre el tema: '+cat+'. Máximo 3 oraciones en español. Específico, con técnica real de venta. Si mencionas producto usa SOLO el catálogo. Emoji al inicio. Solo el tip, sin introducción.';
     const body={contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:1.0,maxOutputTokens:150}};
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GEMINI_KEY,{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GEMINI_KEY,{
       method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
     });
     if(!res.ok)return null;
