@@ -702,6 +702,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
       <button class="mt" id="mmt-trend" onclick="mgrTab('trend')"><span class="mt-icon">📈</span>Trend</button>
       <button class="mt" id="mmt-mis-ventas" onclick="mgrTab('mis-ventas')"><span class="mt-icon">💳</span>Mis Ventas</button>
       <button class="mt" id="mmt-cuota" onclick="mgrTab('cuota')"><span class="mt-icon">🎯</span>Cuotas</button>
+      <button class="mt" id="mmt-trivia" onclick="mgrTab('trivia')"><span class="mt-icon">🎮</span>Trivia</button>
     </div>
   </div>
   <div class="panes-host">
@@ -744,6 +745,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
     <div class="pane" id="mp-cuota"><div id="mgr-cuota-body"></div></div>
     <div class="pane" id="mp-mis-ventas"><div id="mgr-mis-ventas-body"></div></div>
     <div class="pane" id="mp-trend"><div id="trend-mgr-body"></div></div>
+    <div class="pane" id="mp-trivia"><div id="trivia-body-mgr"></div></div>
     <div class="pane" id="mp-resultados">
       <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 16px 0">
@@ -793,6 +795,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
       <button class="mt" id="amt-usuarios" onclick="admTab('usuarios')"><span class="mt-icon">👤</span>Usuarios</button>
       <button class="mt" id="amt-mis-ventas" onclick="admTab('mis-ventas')"><span class="mt-icon">💳</span>Mis Ventas</button>
       <button class="mt" id="amt-prospectos" onclick="admTab('prospectos')"><span class="mt-icon">👥</span>Prospectos</button>
+      <button class="mt" id="amt-trivia" onclick="admTab('trivia')"><span class="mt-icon">🎮</span>Trivia</button>
     </div>
   </div>
   <div class="panes-host">
@@ -834,6 +837,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
     <div class="pane" id="ap-cuota"><div id="adm-cuota-body"></div></div>
     <div class="pane" id="ap-mis-ventas"><div id="adm-mis-ventas-body"></div></div>
     <div class="pane" id="ap-trend"><div id="trend-adm-body"></div></div>
+    <div class="pane" id="ap-trivia"><div id="trivia-body-adm"></div></div>
     <div class="pane" id="ap-resultados">
       <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 16px 0">
@@ -1401,7 +1405,7 @@ function selTab(tab){
   if(tab==='trivia')renderTrivia();
 }
 function mgrTab(tab){
-  ['ventas','equipo','concursos','tareas','resultados','cuota','prospectos','followups','trend','mis-ventas'].forEach(t=>{
+  ['ventas','equipo','concursos','tareas','resultados','cuota','prospectos','followups','trend','mis-ventas','trivia'].forEach(t=>{
     const b=document.getElementById('mmt-'+t);const p=document.getElementById('mp-'+t);
     if(b)b.classList.toggle('on',t===tab);if(p)p.classList.toggle('on',t===tab);
   });
@@ -1418,9 +1422,10 @@ function mgrTab(tab){
   if(tab==='equipo'){renderMgrEquipo();}
   if(tab==='mis-ventas')renderMisVentasTab('mgr');
   if(tab==='trend')renderTrendMgr();
+  if(tab==='trivia')renderTriviaIn('trivia-body-mgr');
 }
 function admTab(tab){
-  ['resumen','tiendas','concursos','catalogo','tareas','resultados','usuarios','cuota','prospectos','trend','mis-ventas'].forEach(t=>{
+  ['resumen','tiendas','concursos','catalogo','tareas','resultados','usuarios','cuota','prospectos','trend','mis-ventas','trivia'].forEach(t=>{
     const b=document.getElementById('amt-'+t);const p=document.getElementById('ap-'+t);
     if(b)b.classList.toggle('on',t===tab);if(p)p.classList.toggle('on',t===tab);
   });
@@ -1435,6 +1440,7 @@ function admTab(tab){
   if(tab==='prospectos')renderAdmProspectos();
   if(tab==='mis-ventas')renderMisVentasTab('adm');
   if(tab==='trend')renderTrendAdm();
+  if(tab==='trivia')renderTriviaIn('trivia-body-adm');
 }
 var _mgrMonth = ''; // empty = curMonth
 
@@ -6670,8 +6676,10 @@ function _triviaToday(){return new Date().toISOString().split('T')[0];}
 function getTriviaPlays(){return parseInt(localStorage.getItem('wcs_trivia_'+_triviaToday())||'0');}
 function incTriviaPlays(){var n=getTriviaPlays()+1;localStorage.setItem('wcs_trivia_'+_triviaToday(),n);return n;}
 
+function _triviaContainer(){return document.getElementById('trivia-body')||document.getElementById('trivia-body-mgr')||document.getElementById('trivia-body-adm');}
+function renderTriviaIn(id){var el=document.getElementById(id);if(el)el.id='trivia-body';renderTrivia();}
 function renderTrivia(){
-  var body=document.getElementById('trivia-body');
+  var body=_triviaContainer();
   if(!body)return;
   var plays=getTriviaPlays();
   var left=Math.max(0,3-plays);
@@ -6708,7 +6716,7 @@ function renderTrivia(){
 
 async function startTrivia(){
   if(getTriviaPlays()>=3)return;
-  var body=document.getElementById('trivia-body');
+  var body=_triviaContainer();
   body.innerHTML='<div style="padding:40px;text-align:center">'
     +'<div style="font-size:36px;margin-bottom:12px">🤖</div>'
     +'<div style="font-size:14px;font-weight:700;color:#333">El AI está generando tus preguntas...</div>'
@@ -6747,7 +6755,7 @@ function showTriviaQuestion(){
   if(!TRIVIA_STATE)return;
   var s=TRIVIA_STATE;
   var q=s.questions[s.current];
-  var body=document.getElementById('trivia-body');
+  var body=_triviaContainer();
   var isBonus=q.cat==='pr'||q.cat==='music';
   var catLabel=q.cat==='pr'?'🇵🇷 Puerto Rico':q.cat==='music'?'🎵 Música PR':'📱 T-Mobile';
   body.innerHTML='<div style="padding:16px;max-width:480px;margin:0 auto">'
@@ -6833,7 +6841,7 @@ async function endTrivia(){
       +'</div>';
   }).join('');
   var emoji=finalScore>=700?'🔥':finalScore>=450?'👏':'💪';
-  var body=document.getElementById('trivia-body');
+  var body=_triviaContainer();
   body.innerHTML='<div style="padding:16px;max-width:480px;margin:0 auto;text-align:center">'
     +'<div style="font-size:52px;margin-bottom:8px">'+emoji+'</div>'
     +'<div style="font-size:28px;font-weight:900;color:#111;margin-bottom:4px">'+finalScore+' pts</div>'
