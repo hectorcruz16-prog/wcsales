@@ -6015,29 +6015,22 @@ async function showMotivationPopup(){
   document.body.appendChild(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
 
-  // Si es modo IA, mostrar fallback inmediato y reemplazar con Gemini si responde
-  if(modeKey==='ai'){
-    const elAI=document.getElementById('mot-ai-body');
-    const fallbackMsg=ctx
-      ? `Enfócate en llegar a tu meta de hoy. Revisa tus prospectos pendientes y da seguimiento a los clientes de esta semana.`
-      : `Revisa tu pipeline de prospectos, haz follow-up a los clientes tibios y prioriza HSI en cada visita.`;
-    if(elAI) elAI.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${fallbackMsg}</div>`;
-    if(ctx){
-      try{
-        const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
-        const aiPrompt=`Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores.\nAnaliza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas. Máximo 80 palabras.\nContexto: ${ctx}`;
-        const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:400,temperature:0.7},thinkingConfig:{thinkingBudget:0}})
-        });
-        if(r.ok){
-          const data=await r.json();
-          const msg=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim().replace(/\*\*/g,'').replace(/\*/g,'').replace(/#+\s?/g,'');
-          const el2=document.getElementById('mot-ai-body');
-          if(el2&&msg) el2.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg}</div>`;
-        }
-      }catch(e){}
-    }
+  // Si es modo IA, esperar respuesta de Gemini (sin fallback)
+  if(modeKey==='ai' && ctx){
+    try{
+      const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
+      const aiPrompt=`Eres asesor de ventas T-Mobile. Analiza el contexto y da exactamente 2 acciones concretas para HOY. Si hay prospectos pendientes menciona el nombre. Si hay metas rezagadas di qué producto priorizar. Usa los números reales. Sin markdown. Sin asteriscos. Maximo 50 palabras.\nContexto: ${ctx}`;
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:200,temperature:0.7,thinkingConfig:{thinkingBudget:0}}})
+      });
+      if(r.ok){
+        const data=await r.json();
+        const msg=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim().replace(/\*\*/g,'').replace(/\*/g,'').replace(/#+\s?/g,'');
+        const elAI=document.getElementById('mot-ai-body');
+        if(elAI&&msg) elAI.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg}</div>`;
+      }
+    }catch(e){}
   }
 
   // Si es modo phone, cargar contenido IA async
@@ -6158,7 +6151,7 @@ async function fetchAITip(ctx){
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:300,temperature:0.8},thinkingConfig:{thinkingBudget:0}})
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:200,temperature:0.8,thinkingConfig:{thinkingBudget:0}}})
     });
     const data=await r.json();
     const txt=(data.candidates||[])[0]?.content?.parts?.[0]?.text||'';
@@ -6536,7 +6529,7 @@ async function fetchGeminiSalesTip(){
     const cat=cats[Math.floor(Math.random()*cats.length)];
     const CATALOG='DISPOSITIVOS VIGENTES T-MOBILE 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores, S24, S25 estándar, A56 u otros no listados.';
     const prompt='Eres coach experto de ventas de T-Mobile. '+CATALOG+' Genera UN tip de ventas ÚNICO sobre el tema: '+cat+'. Máximo 3 oraciones en español. Específico, con técnica real de venta. Si mencionas producto usa SOLO el catálogo. Emoji al inicio. Solo el tip, sin introducción.';
-    const body={contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:1.0,maxOutputTokens:300},thinkingConfig:{thinkingBudget:0}};
+    const body={contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:1.0,maxOutputTokens:200,thinkingConfig:{thinkingBudget:0}}};
     const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GEMINI_KEY,{
       method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
     });
