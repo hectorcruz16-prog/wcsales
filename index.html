@@ -6017,10 +6017,12 @@ async function showMotivationPopup(){
 
   // Si es modo IA, tarjeta estructurada via Gemini
   if(modeKey==='ai'){
-    const STATIC_TIPS=['💡 Pregunta siempre: "¿Cómo tienes el internet en casa?" — abre la puerta al HSI en cada visita.','💡 Después de activar un teléfono: "¿Te pongo el seguro para que cualquier daño quede cubierto?" — así abres P360 sin presión.','💡 Usa el trade-in: "Si traes tu teléfono viejo puedes aplicar un crédito hacia este nuevo." — siempre menciónalo.','💡 Cierre por asunción: no preguntes si quieren el plan, pregunta cuántas líneas necesitan.','💡 Cada cliente con familia es un candidato para el SyncUP Tracker — pregunta si tienen hijos o carro.'];
-    const elAI2=document.getElementById('mot-ai-body');
-    const showFallback2=()=>{if(elAI2)elAI2.innerHTML=`<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">${STATIC_TIPS[Math.floor(Math.random()*STATIC_TIPS.length)]}</div>`;};
-    const aiTimer=setTimeout(showFallback2,7000);
+    var elAI2=document.getElementById('mot-ai-body');
+    var aiTimerDone=false;
+    var aiTimer=setTimeout(function(){
+      aiTimerDone=true;
+      if(elAI2) elAI2.innerHTML='<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">Tip: Pregunta a cada cliente: Como tienes el internet en casa? — abre la puerta al HSI.</div>';
+    },7000);
     try{
       const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
       const AI_TOPICS=[
@@ -6117,19 +6119,21 @@ Sin markdown. Sin asteriscos.`}
       if(r.ok){
         const data=await r.json();
         const raw=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim();
-        if(raw){
+        if(raw && !aiTimerDone){
           clearTimeout(aiTimer);
-          const lines=raw.replace(/\*\*/g,'').replace(/\*/g,'').split('\n').filter(l=>l.trim());
-          const html=lines.map(l=>{
-            const t=l.trim();
-            if(/^[A-ZÁÉÍÓÚÑ\s]+:$/.test(t)) return `<div style="font-size:9px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin:7px 0 2px">${t.replace(':','')}</div>`;
-            if(t.startsWith('•')||t.startsWith('-')) return `<div style="display:flex;gap:5px;margin-bottom:2px"><span style="color:var(--m)">•</span><span>${t.replace(/^[•\-]\s*/,'')}</span></div>`;
-            return `<div style="margin-bottom:3px">${t}</div>`;
-          }).join('');
-          if(elAI2) elAI2.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);letter-spacing:.5px;margin-bottom:5px">${topic.icon} ${topic.label}</div><div style="font-size:12px;font-weight:500;line-height:1.5;color:#222">${html}</div>`;
+          var lines=raw.replace(/\*\*/g,'').replace(/\*/g,'').split('\n');
+          var html='';
+          for(var li=0;li<lines.length;li++){
+            var t=lines[li].trim();
+            if(!t) continue;
+            if(/^[A-Z\s]+:$/.test(t)) html+='<div style="font-size:9px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin:7px 0 2px">'+t.replace(':','')+'</div>';
+            else if(t.charAt(0)==='•'||t.charAt(0)==='-') html+='<div style="display:flex;gap:5px;margin-bottom:2px"><span style="color:var(--m)">•</span><span>'+t.replace(/^[•\-]\s*/,'')+'</span></div>';
+            else html+='<div style="margin-bottom:3px">'+t+'</div>';
+          }
+          if(elAI2) elAI2.innerHTML='<div style="font-size:10px;font-weight:800;color:var(--m);letter-spacing:.5px;margin-bottom:5px">'+topic.icon+' '+topic.label+'</div><div style="font-size:12px;font-weight:500;line-height:1.5;color:#222">'+html+'</div>';
         }
       }
-    }catch(e){clearTimeout(aiTimer);showFallback2();}
+    }catch(e){clearTimeout(aiTimer);if(elAI2&&!aiTimerDone)elAI2.innerHTML='<div style="font-size:12px;color:#555">Tip: Usa el trade-in en cada venta para reducir el costo inicial al cliente.</div>';}
   }
 
   // Si es modo phone, cargar contenido IA async
