@@ -6681,7 +6681,10 @@ function _triviaContainer(){return document.getElementById(_triviaContainerId);}
 function renderTrivia(containerId){
   if(containerId)_triviaContainerId=containerId;
   var body=_triviaContainer();
-  if(!body)return;
+  if(!body){console.warn('[Trivia] container not found:',_triviaContainerId);return;}
+  try{_renderTriviaBody(body);}catch(e){body.innerHTML='<div style="padding:20px;text-align:center;color:#e20074;font-size:13px">Error: '+e.message+'</div>';}
+}
+function _renderTriviaBody(body){
   var plays=getTriviaPlays();
   var left=Math.max(0,3-plays);
   var u=me();var d=db();
