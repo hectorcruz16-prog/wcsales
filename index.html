@@ -6015,38 +6015,111 @@ async function showMotivationPopup(){
   document.body.appendChild(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
 
-  // Si es modo IA, tip de ventas concreto via Gemini
+  // Si es modo IA, tarjeta estructurada via Gemini
   if(modeKey==='ai'){
     try{
       const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
       const AI_TOPICS=[
-        {label:'Cierre',q:'Escribe una frase exacta de cierre por asuncion que un vendedor T-Mobile puede decir hoy. Solo la frase, nada mas.'},
-        {label:'iPhone 17 Pro',q:'En 2 oraciones: por que un cliente de iPhone 12 o 13 deberia subir al iPhone 17 Pro ahora. Solo datos reales del chip A19 Pro y Apple Intelligence.'},
-        {label:'iPhone 17 Air',q:'En 2 oraciones: que hace unico al iPhone 17 Air y para que tipo de cliente es ideal. Solo hechos: 5.5mm de grosor, chip A19, Dynamic Island.'},
-        {label:'Galaxy S26 Ultra',q:'En 2 oraciones: por que el Galaxy S26 Ultra con Snapdragon 8 Elite Gen 2 y Galaxy AI 2.0 es la mejor opcion para un cliente power user Android.'},
-        {label:'HSI',q:'Escribe exactamente que decirle a un cliente cuando dices: como tienes el internet en casa? Una respuesta de 2 oraciones que lleve a vender T-Mobile Home Internet sin inventar precios.'},
-        {label:'P360',q:'Escribe el pitch exacto de 2 oraciones para vender Protection 360 despues de activar cualquier iPhone 17. Menciona el costo de reparar pantalla sin seguro vs con P360.'},
-        {label:'MORE vs BEYOND',q:'En 2 oraciones explica la diferencia entre plan MORE y plan BEYOND de T-Mobile. Solo lo que esta incluido en cada uno, sin inventar precios.'},
-        {label:'Objecion precio',q:'El cliente dice: esta muy caro. Escribe exactamente que responder en 2 oraciones para redirigir a valor, no a precio.'},
-        {label:'Trade-in',q:'En 2 oraciones: como mencionarle el trade-in a un cliente para que traiga su telefono viejo la proxima vez. Solo la frase exacta.'},
-        {label:'SyncUP Tracker',q:'En 2 oraciones: para quien es el SyncUP Tracker y la frase exacta para ofrecerlo a un cliente con hijos o carro.'},
-        {label:'Galaxy Watch 8',q:'En 2 oraciones: por que ofrecer el Galaxy Watch 8 a cualquier cliente que compra un S26. Solo hechos del producto.'},
-        {label:'Apple Watch SE 3',q:'En 2 oraciones: por que el Apple Watch SE 3 es facil de vender a cualquier cliente de iPhone como BTS economico.'},
-        {label:'T-Mobile vs AT&T',q:'Dame la ventaja mas fuerte y real de T-Mobile sobre AT&T en cobertura o precio en 2025. Una sola oracion concreta sin inventar estadisticas.'},
-        {label:'Accesorios upsell',q:'Escribe la pregunta exacta que debe hacer un vendedor para abrir la conversacion de accesorios justo al activar un telefono nuevo.'},
-        {label:'Samsung Tab A11+',q:'En 2 oraciones: como vender el Samsung Galaxy Tab A11+ como BTS a un cliente que compra un S26. Por que tiene sentido activarla.'}
+        {icon:'🏠',label:'HSI — Home Internet',q:`Genera una tarjeta de venta para T-Mobile Home Internet. USA EXACTAMENTE este formato, sin cambiar los titulos:
+BENEFICIOS:
+• [beneficio real 1]
+• [beneficio real 2]
+• [beneficio real 3]
+• [beneficio real 4]
+PREGUNTA DE APERTURA:
+[una pregunta corta para abrir con el cliente]
+TIP DE CIERRE:
+[frase exacta de cierre]
+Solo hechos reales. Sin precios inventados.`},
+        {icon:'🛡️',label:'Protection 360 — P360',q:`Genera una tarjeta de venta para Protection 360 de T-Mobile en Puerto Rico. USA EXACTAMENTE este formato:
+BENEFICIOS:
+• Cobertura por perdida y robo
+• [beneficio real 2]
+• [beneficio real 3]
+• McAfee Security incluido
+• Soporte tecnico 24/7
+PREGUNTA DE APERTURA:
+[pregunta corta para abrir con el cliente]
+TIP DE CIERRE:
+[frase de cierre sin mencionar precios especificos porque en PR aplican precios diferentes al mercado continental]`},
+        {icon:'📱',label:'Tips de Venta — Cierre',q:`Genera una tarjeta de tecnicas de cierre para vendedor T-Mobile. USA EXACTAMENTE este formato:
+TECNICAS:
+• [tecnica de cierre 1 con ejemplo de frase]
+• [tecnica de cierre 2 con ejemplo de frase]
+• [tecnica de cierre 3 con ejemplo de frase]
+PREGUNTA CLAVE:
+[la pregunta mas efectiva para detectar intencion de compra]
+FRASE DE CIERRE:
+[frase exacta de cierre por asuncion]`},
+        {icon:'💬',label:'Manejo de Objeciones',q:`Genera una tarjeta de manejo de objeciones para vendedor T-Mobile. USA EXACTAMENTE este formato:
+OBJECIONES COMUNES:
+• "Esta muy caro" → [respuesta exacta]
+• "Lo voy a pensar" → [respuesta exacta]
+• "En AT&T me dan mas" → [respuesta exacta]
+TIP:
+[un consejo corto sobre como manejar objeciones en general]`},
+        {icon:'🌐',label:'MORE vs BEYOND',q:`Compara los planes MORE y BEYOND de T-Mobile. USA EXACTAMENTE este formato:
+PLAN MORE INCLUYE:
+• [beneficio 1]
+• [beneficio 2]
+• [beneficio 3]
+PLAN BEYOND AGREGA:
+• [diferencia 1]
+• [diferencia 2]
+RECOMIENDA MORE CUANDO:
+[tipo de cliente ideal]
+RECOMIENDA BEYOND CUANDO:
+[tipo de cliente ideal]
+Solo beneficios reales conocidos, sin inventar.`},
+        {icon:'🔄',label:'Trade-in — Como Usarlo',q:`Genera una tarjeta sobre como usar trade-in para cerrar ventas en T-Mobile. USA EXACTAMENTE este formato:
+PASOS:
+• [paso 1]
+• [paso 2]
+• [paso 3]
+FRASE PARA EL CLIENTE:
+[frase exacta para mencionar trade-in naturalmente]
+TIP:
+[un truco concreto para maximizar trade-in en cada venta]`},
+        {icon:'📍',label:'SyncUP Tracker',q:`Genera una tarjeta de venta para SyncUP Tracker de T-Mobile. USA EXACTAMENTE este formato:
+PARA QUIEN ES:
+• Familias con hijos
+• [otro perfil de cliente]
+• [otro perfil de cliente]
+BENEFICIOS:
+• [beneficio 1 real]
+• [beneficio 2 real]
+• [beneficio 3 real]
+FRASE DE APERTURA:
+[pregunta natural para ofrecerlo sin que suene forzado]`},
+        {icon:'🧠',label:'Dato Curioso',q:`Dame UN dato curioso genuinamente sorprendente, completamente ajeno a telecomunicaciones y tecnologia. Puede ser de ciencia, historia, animales, psicologia, astronomia o naturaleza. USA EXACTAMENTE este formato:
+DATO:
+[el dato curioso en 2-3 oraciones concretas]
+POR QUE IMPORTA:
+[una oracion de contexto o perspectiva interesante]
+Sin markdown. Sin asteriscos. Solo hechos verificables.`},
+        {icon:'🧠',label:'Dato Curioso',q:`Dame UN dato sorprendente sobre el cerebro humano o psicologia del consumidor que un vendedor pueda encontrar util. USA EXACTAMENTE este formato:
+DATO:
+[el dato en 2-3 oraciones]
+APLICACION EN VENTAS:
+[como este dato aplica al trabajo de un vendedor, 1 oracion]
+Sin markdown. Sin asteriscos.`}
       ];
       const topic=AI_TOPICS[Math.floor(Math.random()*AI_TOPICS.length)];
-      const aiPrompt=`Eres un experto en productos T-Mobile. REGLAS ESTRICTAS: NO inventes nombres de personas. NO inventes precios especificos a menos que los conozcas con certeza. NO combines productos que no tienen relacion (HSI no se combina con relojes). Responde SOLO lo que se te pregunta, sin introduccion, sin markdown, sin asteriscos, en español.\n\nPregunta: ${topic.q}`;
+      const aiPrompt=`Eres experto en ventas T-Mobile Puerto Rico. REGLAS: Sigue el formato indicado exactamente. NO inventes nombres de personas. NO inventes precios. NO uses markdown ni asteriscos. Escribe en español.\n\n${topic.q}`;
       const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GKEY,{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:150,temperature:0.3,thinkingConfig:{thinkingBudget:0}}})
+        body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:350,temperature:0.3,thinkingConfig:{thinkingBudget:0}}})
       });
       if(r.ok){
         const data=await r.json();
-        const msg=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim().replace(/\*\*/g,'').replace(/\*/g,'').replace(/#+\s?/g,'');
+        const raw=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim();
+        const formatted=raw
+          .replace(/\*\*/g,'').replace(/\*/g,'')
+          .replace(/^([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s\-—]+):$/gm,'<div style="font-size:9px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin:8px 0 3px">$1</div>')
+          .replace(/^•\s?(.+)$/gm,'<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--m);flex-shrink:0">•</span><span>$1</span></div>')
+          .replace(/\n/g,'');
         const elAI=document.getElementById('mot-ai-body');
-        if(elAI&&msg) elAI.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">💡 ${topic.label}</div><div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg}</div>`;
+        if(elAI&&formatted) elAI.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${topic.icon} ${topic.label}</div><div style="font-size:12px;font-weight:500;line-height:1.5;color:#222">${formatted}</div>`;
       }
     }catch(e){}
   }
