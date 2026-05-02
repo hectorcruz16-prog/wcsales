@@ -7095,29 +7095,24 @@ function _renderReportKPI(role){
 }
 
 function openReportWindow(role){
-  var rd=_reportData(role);
-  var html=buildReportHTML(rd);
-  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  // Remove any existing overlay
-  var old=document.getElementById('report-overlay');if(old)old.remove();
-  var overlay=document.createElement('div');
-  overlay.id='report-overlay';
-  overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:flex;flex-direction:column;background:#f4f5f7';
-  overlay.innerHTML=
-    '<div style="background:#e20074;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)">'
-    +'<button onclick="document.getElementById(\'report-overlay\').remove()" style="background:rgba(255,255,255,.25);border:none;color:#fff;font-size:18px;font-weight:900;width:34px;height:34px;border-radius:8px;cursor:pointer;line-height:1">✕</button>'
-    +'<span style="font-size:16px;font-weight:900;flex:1">📊 Reporte · '+rd.scopeLabel+'</span>'
-    +'<a href="'+url+'" download="reporte-wcsales.html" style="background:rgba(255,255,255,.25);color:#fff;text-decoration:none;font-size:12px;font-weight:800;padding:7px 13px;border-radius:8px;white-space:nowrap">⬇ Guardar HTML</a>'
-    +'</div>'
-    +'<iframe src="'+url+'" style="flex:1;border:none;width:100%" onload="setTimeout(function(){URL.revokeObjectURL(\''+url+'\')},5000)"></iframe>';
-  document.body.appendChild(overlay);
+  try{
+    _lastReportRole=role;
+    var rd=_reportData(role);
+    var old=document.getElementById('report-overlay');if(old)old.remove();
+    var overlay=document.createElement('div');
+    overlay.id='report-overlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:#f0f1f4;overflow-y:auto;-webkit-overflow-scrolling:touch';
+    overlay.innerHTML=_buildReportContent(rd);
+    document.body.appendChild(overlay);
+    overlay.scrollTop=0;
+  }catch(e){toast('Error generando reporte: '+e.message,'err');console.error(e);}
 }
 
-function buildReportHTML(rd){
-  var maxGP=Math.max.apply(null,rd.repRows.map(function(r){return r.gp;})||[1])||1;
-  var maxStoreGP=rd.isAdm?(Math.max.apply(null,rd.storeRows.map(function(r){return r.gp;})||[1])||1):1;
-  var repNames=JSON.stringify(rd.repRows.map(function(r){return r.name.split(' ')[0];}));
+function _buildReportContent(rd){
+  var maxGP=rd.repRows.reduce(function(m,r){return Math.max(m,r.gp);},1)||1;
+  var maxStoreGP=rd.storeRows.reduce(function(m,r){return Math.max(m,r.gp);},1)||1;
+  var maxVoice=rd.repRows.reduce(function(m,r){return Math.max(m,r.voice);},1)||1;
+  var now=new Date().toLocaleDateString('es-PR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var repGPs=JSON.stringify(rd.repRows.map(function(r){return Math.round(r.gp);}));
   var repVoice=JSON.stringify(rd.repRows.map(function(r){return r.voice;}));
   var storeNames=JSON.stringify(rd.storeRows.map(function(r){return r.name;}));
@@ -7126,122 +7121,148 @@ function buildReportHTML(rd){
   var dayGPs=JSON.stringify(rd.days.map(function(d){return Math.round(rd.dayMap[d]);}));
   var now=new Date().toLocaleDateString('es-PR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
+  // CSS bar helpers
+  function bar(val,max,color){
+    var pct=max>0?Math.min(100,Math.round(val/max*100)):0;
+    return '<div style="flex:1;background:#eef0f5;border-radius:6px;height:22px;overflow:hidden;position:relative">'
+      +'<div style="height:100%;background:'+color+';width:'+pct+'%;border-radius:6px;min-width:'+(pct>0?'4px':'0')+'"></div>'
+      +'</div>';
+  }
+  function card(style,inner){return '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);'+style+'">'+inner+'</div>';}
+  function sec(title,inner){return '<div style="padding:0 14px 16px"><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#aaa;margin-bottom:10px">'+title+'</div>'+inner+'</div>';}
+
+  // KPIs
+  var kpis=[
+    {icon:'💰',label:'Gross Profit',val:'$'+Math.round(rd.totalGP).toLocaleString('en-US'),color:'#e20074'},
+    {icon:'📱',label:'Voice',val:rd.totalVoice,color:'#0ea5e9'},
+    {icon:'💼',label:'BTS',val:rd.totalBTS,color:'#6b0080'},
+    {icon:'🌐',label:'HSI',val:rd.totalHSI,color:'#00b884'},
+    {icon:'🛡',label:'P360',val:rd.totalP360,color:'#f59e0b'},
+    {icon:'🎧',label:'Accesorios',val:'$'+Math.round(rd.totalAccs).toLocaleString('en-US'),color:'#64748b'}
+  ];
+  var kpiHtml=kpis.map(function(k){
+    return '<div style="background:#fff;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)">'
+      +'<div style="font-size:20px;font-weight:900;color:'+k.color+'">'+k.val+'</div>'
+      +'<div style="font-size:10px;color:#999;margin-top:3px;font-weight:700">'+k.icon+' '+k.label+'</div>'
+      +'</div>';
+  }).join('');
+
+  // GP bar chart
+  var gpBarsHtml=rd.repRows.map(function(r,i){
+    var clr=i===0?'#e20074':'rgba(226,0,116,.5)';
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<div style="width:70px;font-size:11px;font-weight:700;color:#555;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.name.split(' ')[0]+'</div>'
+      +bar(r.gp,maxGP,clr)
+      +'<div style="width:64px;font-size:11px;font-weight:800;color:#e20074;text-align:right;flex-shrink:0">$'+Math.round(r.gp/1000*10)/10+'k</div>'
+      +'</div>';
+  }).join('');
+
+  // Voice bar chart
+  var voiceBarsHtml=rd.repRows.map(function(r,i){
+    var clr=i===0?'#0ea5e9':'rgba(14,165,233,.45)';
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<div style="width:70px;font-size:11px;font-weight:700;color:#555;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.name.split(' ')[0]+'</div>'
+      +bar(r.voice,maxVoice,clr)
+      +'<div style="width:32px;font-size:11px;font-weight:800;color:#0ea5e9;text-align:right;flex-shrink:0">'+r.voice+'</div>'
+      +'</div>';
+  }).join('');
+
+  // Store bars (admin)
+  var storeBarsHtml=rd.storeRows.map(function(r,i){
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<div style="width:70px;font-size:11px;font-weight:700;color:#555;text-align:right;flex-shrink:0">'+r.name+'</div>'
+      +bar(r.gp,maxStoreGP,'#6b0080')
+      +'<div style="width:64px;font-size:11px;font-weight:800;color:#6b0080;text-align:right;flex-shrink:0">$'+Math.round(r.gp/1000*10)/10+'k</div>'
+      +'</div>';
+  }).join('');
+
+  // Daily trend sparkline SVG
+  var trendSVG='';
+  if(rd.days.length>1){
+    var vals=rd.days.map(function(d){return rd.dayMap[d];});
+    var tMax=Math.max.apply(null,vals)||1;
+    var W=280,H=60,pad=4;
+    var pts=vals.map(function(v,i){
+      var x=pad+i*(W-2*pad)/(vals.length-1);
+      var y=H-pad-(v/tMax)*(H-2*pad);
+      return x.toFixed(1)+','+y.toFixed(1);
+    });
+    trendSVG='<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="display:block;margin-top:8px" preserveAspectRatio="none">'
+      +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="#e20074" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
+      +'<polyline points="'+pad+','+H+' '+pts.join(' ')+' '+(W-pad)+','+H+'" fill="rgba(226,0,116,.12)" stroke="none"/>'
+      +'</svg>'
+      +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#bbb;margin-top:2px">'
+      +'<span>'+rd.days[0].substring(5)+'</span><span>'+rd.days[rd.days.length-1].substring(5)+'</span></div>';
+  } else {
+    trendSVG='<div style="color:#bbb;font-size:12px;text-align:center;padding:16px">Sin datos suficientes</div>';
+  }
+
+  // Ranking table
+  var medals=['🥇','🥈','🥉'];
   var tableRows=rd.repRows.map(function(r,i){
-    var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-    var pctBar=r.pct!==null?'<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#f0f0f5;border-radius:4px;height:6px;overflow:hidden"><div style="height:6px;border-radius:4px;background:'+(r.pct>=100?'#00b884':r.pct>=75?'#ffb800':'#e20074')+';width:'+Math.min(100,r.pct)+'%"></div></div><span style="font-size:11px;font-weight:700;color:'+(r.pct>=100?'#00b884':r.pct>=75?'#ffb800':'#e20074')+'">'+r.pct+'%</span></div>':'—';
-    return '<tr>'
-      +'<td style="font-weight:800">'+medal+' '+r.name+'</td>'
-      +(rd.isAdm?'<td style="color:#888">'+r.store+'</td>':'')
-      +'<td style="font-weight:900;color:#e20074">$'+Math.round(r.gp).toLocaleString('en-US')+'</td>'
-      +'<td>'+pctBar+'</td>'
-      +'<td style="text-align:center">'+r.voice+'</td>'
-      +'<td style="text-align:center">'+r.bts+'</td>'
-      +'<td style="text-align:center">'+r.hsi+'</td>'
-      +'<td style="text-align:center">'+r.p360+'</td>'
-      +'<td style="text-align:right">$'+Math.round(r.accs).toLocaleString('en-US')+'</td>'
-      +'<td style="text-align:right;color:#555">$'+Math.round(r.comm).toLocaleString('en-US')+'</td>'
+    var pctClr=r.pct===null?'#999':r.pct>=100?'#00b884':r.pct>=75?'#ffb800':'#e20074';
+    var pctTxt=r.pct!==null?r.pct+'%':'—';
+    return '<tr style="border-bottom:1px solid #f0f0f5">'
+      +'<td style="padding:10px 14px;font-weight:800">'+(medals[i]||'')+(medals[i]?' ':'')+r.name+(rd.isAdm?'<br><span style="font-size:10px;color:#aaa;font-weight:600">'+r.store+'</span>':'')+'</td>'
+      +'<td style="padding:10px 14px;font-weight:900;color:#e20074">$'+Math.round(r.gp).toLocaleString('en-US')+'</td>'
+      +'<td style="padding:10px 14px;font-weight:800;color:'+pctClr+'">'+pctTxt+'</td>'
+      +'<td style="padding:10px 14px;text-align:center">'+r.voice+'</td>'
+      +'<td style="padding:10px 14px;text-align:center">'+r.bts+'</td>'
+      +'<td style="padding:10px 14px;text-align:center">'+r.hsi+'</td>'
+      +'<td style="padding:10px 14px;text-align:center">'+r.p360+'</td>'
+      +'<td style="padding:10px 14px;text-align:right">$'+Math.round(r.accs).toLocaleString('en-US')+'</td>'
+      +'<td style="padding:10px 14px;text-align:right;color:#555">$'+Math.round(r.comm).toLocaleString('en-US')+'</td>'
       +'</tr>';
   }).join('');
 
-  var storeTableRows=rd.storeRows.map(function(r,i){
-    var pctBar=maxStoreGP>0?'<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#f0f0f5;border-radius:4px;height:6px;overflow:hidden"><div style="height:6px;border-radius:4px;background:#e20074;width:'+Math.round(r.gp/maxStoreGP*100)+'%"></div></div></div>':'';
-    return '<tr><td style="font-weight:800">'+(i===0?'🏆 ':'')+r.name+'</td>'
-      +'<td style="font-weight:900;color:#e20074">$'+Math.round(r.gp).toLocaleString('en-US')+'</td>'
-      +'<td>'+pctBar+'</td>'
-      +'<td style="text-align:center">'+r.voice+'</td>'
-      +'<td style="text-align:center">'+r.p360+'</td>'
-      +'<td style="text-align:right">$'+Math.round(r.accs).toLocaleString('en-US')+'</td>'
-      +'</tr>';
-  }).join('');
+  // Assemble
+  var topBar='<div style="background:linear-gradient(135deg,#c6006f,#e20074);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0">'
+    +'<button onclick="document.getElementById(\'report-overlay\').remove()" style="background:rgba(255,255,255,.25);border:none;color:#fff;font-size:18px;font-weight:900;width:34px;height:34px;border-radius:8px;cursor:pointer">✕</button>'
+    +'<div style="flex:1"><div style="font-size:15px;font-weight:900">📊 Reporte · '+rd.scopeLabel+'</div>'
+    +'<div style="font-size:10px;opacity:.8">'+rd.periodLabel+' · '+now+'</div></div>'
+    +'<button onclick="_downloadReport()" style="background:rgba(255,255,255,.25);border:none;color:#fff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap">⬇ Guardar</button>'
+    +'</div>';
 
-  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    +'<title>Reporte WC Sales — '+rd.scopeLabel+' — '+rd.periodLabel+'</title>'
-    +'<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>'
-    +'<style>'
-    +'*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Arial,sans-serif}'
-    +'body{background:#f4f5f7;color:#111}'
-    +'.header{background:linear-gradient(135deg,#c6006f,#e20074);color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:center}'
-    +'.header h1{font-size:22px;font-weight:900;letter-spacing:-.5px}'
-    +'.header .meta{text-align:right;font-size:12px;opacity:.85;line-height:1.7}'
-    +'.section{padding:20px 32px 0}'
-    +'.section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#888;margin-bottom:12px}'
-    +'.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}'
-    +'.kpi{background:#fff;border-radius:14px;padding:16px 12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07)}'
-    +'.kpi .val{font-size:22px;font-weight:900;color:#e20074}'
-    +'.kpi .lbl{font-size:10px;color:#999;margin-top:4px;text-transform:uppercase;font-weight:700}'
-    +'.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}'
-    +'.chart-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07)}'
-    +'.chart-card.wide{grid-column:1/-1}'
-    +'.chart-card h3{font-size:13px;font-weight:800;color:#333;margin-bottom:16px}'
-    +'table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}'
-    +'thead th{background:#e20074;color:#fff;padding:11px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}'
-    +'tbody td{padding:11px 14px;font-size:13px;border-bottom:1px solid #f0f0f5}'
-    +'tbody tr:last-child td{border:none}'
-    +'tbody tr:nth-child(even) td{background:#fafafa}'
-    +'.footer{padding:24px 32px;text-align:center;font-size:11px;color:#bbb}'
-    +'.no-print{}'
-    +'@media print{'
-    +'body{background:#fff}'
-    +'.no-print{display:none!important}'
-    +'.section{padding:14px 20px 0}'
-    +'.kpi-row{grid-template-columns:repeat(6,1fr)}'
-    +'}'
-    +'</style></head><body>'
-    // Header
-    +'<div class="header"><div><h1>📊 Reporte de Ventas</h1><div style="font-size:14px;opacity:.9;margin-top:4px">'+rd.scopeLabel+' · '+rd.periodLabel+'</div></div>'
-    +'<div class="meta">'+now+'<br>WC Sales</div></div>'
-    // Print + download buttons
-    +'<div class="no-print" style="padding:16px 32px;display:flex;gap:10px">'
-    +'<button onclick="window.print()" style="padding:10px 20px;background:#e20074;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">🖨 Imprimir / Guardar PDF</button>'
-    +'<button onclick="downloadHTML()" style="padding:10px 20px;background:#111;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">⬇ Descargar HTML</button>'
-    +'</div>'
+  var content='<div style="padding:14px;max-width:900px;margin:0 auto">'
     // KPIs
-    +'<div class="section"><div class="section-title">Resumen General</div>'
-    +'<div class="kpi-row">'
-    +'<div class="kpi"><div class="val">$'+Math.round(rd.totalGP).toLocaleString('en-US')+'</div><div class="lbl">💰 Gross Profit</div></div>'
-    +'<div class="kpi"><div class="val">'+rd.totalVoice+'</div><div class="lbl">📱 Voice</div></div>'
-    +'<div class="kpi"><div class="val">'+rd.totalBTS+'</div><div class="lbl">💼 BTS</div></div>'
-    +'<div class="kpi"><div class="val">'+rd.totalHSI+'</div><div class="lbl">🌐 HSI</div></div>'
-    +'<div class="kpi"><div class="val">'+rd.totalP360+'</div><div class="lbl">🛡 P360</div></div>'
-    +'<div class="kpi"><div class="val">$'+Math.round(rd.totalAccs).toLocaleString('en-US')+'</div><div class="lbl">🎧 Accesorios</div></div>'
-    +'</div></div>'
+    +sec('Resumen General','<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+kpiHtml+'</div>')
     // Charts
-    +'<div class="section" style="padding-top:20px"><div class="section-title">Gráficas</div>'
-    +'<div class="charts-row">'
-    +'<div class="chart-card"><h3>💰 GP por Vendedor</h3><canvas id="chartGP" height="220"></canvas></div>'
-    +'<div class="chart-card"><h3>📱 Líneas Voice por Vendedor</h3><canvas id="chartVoice" height="220"></canvas></div>'
-    +(rd.isAdm?'<div class="chart-card"><h3>🏪 GP por Tienda</h3><canvas id="chartStore" height="160"></canvas></div>':'')
-    +'<div class="chart-card '+(rd.isAdm?'':'wide')+'"><h3>📈 Tendencia Diaria GP</h3><canvas id="chartTrend" height="160"></canvas></div>'
-    +'</div></div>'
-    // Ranking table sellers
-    +'<div class="section" style="padding-top:20px"><div class="section-title">Ranking Vendedores</div>'
-    +'<table><thead><tr>'
-    +'<th>Vendedor</th>'+(rd.isAdm?'<th>Tienda</th>':'')+'<th>GP</th><th>vs Meta</th><th>Voice</th><th>BTS</th><th>HSI</th><th>P360</th><th>Accs</th><th>Comisión</th>'
-    +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>'
-    // Stores table (admin only)
-    +(rd.isAdm?'<div class="section" style="padding-top:20px"><div class="section-title">Por Tienda</div>'
-    +'<table><thead><tr><th>Tienda</th><th>GP</th><th>Relativo</th><th>Voice</th><th>P360</th><th>Accs</th></tr></thead>'
-    +'<tbody>'+storeTableRows+'</tbody></table></div>':'')
-    +'<div class="footer">Generado por WC Sales · '+now+'</div>'
-    // Charts JS
-    +'<script>'
-    +'var magenta="#e20074",purple="#6b0080",sky="#0ea5e9",grid="rgba(0,0,0,.06)";'
-    +'var baseOpts={responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:grid},ticks:{font:{size:11,weight:"700"}}},y:{grid:{color:grid},ticks:{font:{size:11}}}}};'
-    +'new Chart(document.getElementById("chartGP"),{type:"bar",data:{labels:'+repNames+',datasets:[{data:'+repGPs+',backgroundColor:'+repGPs+'.map(function(v,i){return i===0?"'+magenta+'":"rgba(226,0,116,.35)";}),'
-    +'borderRadius:8,borderSkipped:false}]},options:Object.assign({},baseOpts,{scales:{x:{grid:{color:grid},ticks:{font:{size:11,weight:"700"}}},y:{grid:{color:grid},ticks:{font:{size:11},callback:function(v){return"$"+v.toLocaleString();}}}}})});'
-    +'new Chart(document.getElementById("chartVoice"),{type:"bar",data:{labels:'+repNames+',datasets:[{data:'+repVoice+',backgroundColor:'+repVoice+'.map(function(v,i){return i===0?"'+sky+'":"rgba(14,165,233,.35)";}),'
-    +'borderRadius:8,borderSkipped:false}]},options:baseOpts});'
-    +(rd.isAdm?'new Chart(document.getElementById("chartStore"),{type:"bar",data:{labels:'+storeNames+',datasets:[{data:'+storeGPs+',backgroundColor:"'+purple+'",borderRadius:8,borderSkipped:false}]},'
-    +'options:Object.assign({},baseOpts,{indexAxis:"y",scales:{x:{grid:{color:grid},ticks:{callback:function(v){return"$"+v.toLocaleString();}}},y:{grid:{color:grid}}}})});':'')
-    +'new Chart(document.getElementById("chartTrend"),{type:"line",data:{labels:'+dayLabels+',datasets:[{data:'+dayGPs+',borderColor:"'+magenta+'",backgroundColor:"rgba(226,0,116,.08)",fill:true,tension:.4,pointRadius:3,pointBackgroundColor:"'+magenta+'"}]},'
-    +'options:Object.assign({},baseOpts,{scales:{x:{grid:{color:grid},ticks:{font:{size:10}}},y:{grid:{color:grid},ticks:{callback:function(v){return"$"+v.toLocaleString();}}}}})});'
-    +'function downloadHTML(){'
-    +'var blob=new Blob([document.documentElement.outerHTML],{type:"text/html"});'
-    +'var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="reporte-wcsales.html";a.click();}'
-    +'<\/script>'
-    +'</body></html>';
+    +sec('💰 GP por Vendedor',card('',gpBarsHtml))
+    +sec('📱 Voice por Vendedor',card('',voiceBarsHtml))
+    +(rd.isAdm?sec('🏪 GP por Tienda',card('',storeBarsHtml)):'')
+    +sec('📈 Tendencia Diaria GP',card('',trendSVG))
+    // Table
+    +sec('Ranking Vendedores','<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)">'
+      +'<thead><tr style="background:#e20074;color:#fff">'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px">Vendedor</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px">GP</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px">Meta%</th>'
+      +'<th style="padding:10px 14px;text-align:center;font-size:11px">📱</th>'
+      +'<th style="padding:10px 14px;text-align:center;font-size:11px">💼</th>'
+      +'<th style="padding:10px 14px;text-align:center;font-size:11px">🌐</th>'
+      +'<th style="padding:10px 14px;text-align:center;font-size:11px">🛡</th>'
+      +'<th style="padding:10px 14px;text-align:right;font-size:11px">Accs</th>'
+      +'<th style="padding:10px 14px;text-align:right;font-size:11px">Comisión</th>'
+      +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>')
+    +'<div style="text-align:center;font-size:10px;color:#ccc;padding:16px 0">WC Sales · '+now+'</div>'
+    +'</div>';
+
+  return topBar+content;
 }
 
+var _lastReportRole=null;
+function _downloadReport(){
+  try{
+    var role=_lastReportRole||'mgr';
+    var rd=_reportData(role);
+    var blob=new Blob([_buildReportContent(rd)],{type:'text/html;charset=utf-8'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='reporte-wcsales-'+rd.periodLabel.replace(/\s/g,'-')+'.html';
+    a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},5000);
+  }catch(e){toast('Error al descargar','err');}
+}
 
 </script>
 <!-- Firebase via ES Modules (official method for modern browsers) -->
