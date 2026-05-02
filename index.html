@@ -5946,7 +5946,18 @@ async function showMotivationPopup(){
         const sales=repSales(d,u.id,cm);
         const g=getGoalForMonth(d,u.id,cm);
         const gp=calcPace(sales,g.gp||8000,mGP);
+        const todayK=todayKey();
+        const dueProsp2=(d.prospectos||[]).filter(p=>p.repId===u.id&&p.status!=='done'&&p.reminder&&p.reminder<=todayK);
+        const dueFUs2=(d.followups||[]).filter(f=>f.repId===u.id&&!f.done&&f.reminder&&f.reminder<=todayK);
+        const voice2=calcPace(sales,g.nuevas||0,mVoice);
+        const bts2=calcPace(sales,g.bts||0,mBTS);
+        const hsi2=calcPace(sales,g.hsi||0,mHSI);
         ctx=`Vendedor: ${u.name}. Día ${gp.dayOfMonth}/${gp.daysInMonth}. GP: $${Math.round(gp.actual)}/$${Math.round(gp.goal)} (${gp.pacePct}%). Días restantes: ${gp.daysLeft}. GP necesario hoy: $${gp.daysLeft>0?Math.ceil(gp.remaining/gp.daysLeft):0}.`;
+        if(g.nuevas>0)ctx+=` Voice: ${Math.round(voice2.actual)}/${g.nuevas}.`;
+        if(g.bts>0)ctx+=` BTS: ${Math.round(bts2.actual)}/${g.bts}.`;
+        if(g.hsi>0)ctx+=` HSI: ${Math.round(hsi2.actual)}/${g.hsi}.`;
+        if(dueProsp2.length>0)ctx+=` PROSPECTOS PARA LLAMAR HOY: ${dueProsp2.slice(0,3).map(p=>p.name||'Sin nombre').join(', ')}.`;
+        if(dueFUs2.length>0)ctx+=` Follow-ups vencidos: ${dueFUs2.length}.`;
       } else if(u.role==='manager'){
         const sellers=d.users.filter(s=>(s.role==='seller'||s.role==='ram')&&s.storeCode===u.storeCode&&s.active!==false);
         const sellerIds=sellers.map(s=>s.id);
@@ -6010,7 +6021,7 @@ async function showMotivationPopup(){
   // Si es modo IA, cargar mensaje async
   if(modeKey==='ai' && ctx){
     try{
-      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:130,messages:[{role:'user',content:`Eres el coach de ventas de T-Mobile. Analiza el contexto del vendedor y escribe un mensaje personalizado, directo y motivador (3-4 oraciones, máximo 70 palabras). Menciona exactamente qué debe lograr hoy. Sin emojis. Sin saltos de línea extra. Solo el mensaje.\nContexto: ${ctx}`}]})});
+      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:150,messages:[{role:'user',content:`Eres el asesor de ventas de T-Mobile. Analiza el contexto y da 2-3 acciones concretas que el vendedor debe hacer AHORA. Si hay prospectos para llamar, menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases vagas ni motivacionales. Máximo 80 palabras, solo acciones específicas.\nContexto: ${ctx}`}]})});
       const data=await r.json();
       const msg=(data.content||[]).map(b=>b.text||'').join('').trim();
       const el=document.getElementById('mot-ai-body');
@@ -6135,7 +6146,7 @@ function buildRepTrendCard(rep,sales,goals,cm,showName){
 async function fetchAITip(ctx){
   try{
     const GKEY='AIzaSyA1vSg3GGbxmL5XiHosdUsO8YWjdYU2WBY';
-    const prompt='Eres el coach motivacional de un equipo de ventas de T-Mobile. DISPOSITIVOS VIGENTES T-MOBILE LANZADOS EN EL ÚLTIMO AÑO (2024-2026, únicos sobre los que puedes hablar): iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17, iPhone 16 Pro Max, iPhone 16 Pro, iPhone 16 Plus, iPhone 16. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios T-Mobile: Home Internet HSI, Protection 360 P360, SyncUP Tracker. Planes actuales: MORE y BEYOND. PROHIBIDO mencionar cualquier dispositivo fuera de esta lista, incluyendo A56, S25 estándar, S24, iPhone 15 o anteriores. Analiza el contexto del vendedor y escribe UN mensaje motivador y accionable (2-3 oraciones). Usa los números reales del contexto (GP, %, días). Si mencionas un dispositivo usa SOLO los de la lista vigente. Termina con una frase motivadora corta. Sin introducción, solo el mensaje.'+'\nContexto: '+ctx;
+    const prompt='Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES (2024-2026): iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17, iPhone 16 Pro Max, iPhone 16 Pro, iPhone 16 Plus, iPhone 16. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Tablets: Samsung Tab A11+, iPad A16. Wearables: Apple Watch Series 10, Apple Watch SE 3, Samsung Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. Analiza el contexto y da 2-3 acciones CONCRETAS y específicas que el vendedor debe hacer AHORA. Si hay prospectos para llamar, menciona el nombre. Si hay metas rezagadas, indica exactamente qué producto priorizar. Si hay follow-ups vencidos, dilo. Usa los números del contexto. Sin frases motivacionales vagas. Solo acciones específicas.\nContexto: '+ctx;
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GKEY,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -6158,6 +6169,11 @@ function buildTrendCtx(sales,goals,repId,cm,name){
   const todayGP=todaySales.reduce((a,s)=>a+saleGP(s),0);
   const p360Count=sales.reduce((a,s)=>a+(s.txns||[]).filter(t=>t.p360).length,0);
   const accs=calcPace(sales,g.acc||0,mAccs);
+  const d=db();
+  const allProsp=(d.prospectos||[]).filter(p=>p.repId===repId&&p.status!=='done');
+  const dueProsp=allProsp.filter(p=>p.reminder&&p.reminder<=today);
+  const allFUs=(d.followups||[]).filter(f=>f.repId===repId&&!f.done);
+  const dueFUs=allFUs.filter(f=>f.reminder&&f.reminder<=today);
   let ctx=`Vendedor: ${name}. `;
   ctx+=`Día ${gp.dayOfMonth} de ${gp.daysInMonth} (${gp.daysLeft} días restantes). `;
   ctx+=`GP: $${Math.round(gp.actual)} de $${Math.round(gp.goal)} meta (${gp.pacePct}% al ritmo actual, proyecta $${Math.round(gp.pace)}). `;
@@ -6168,6 +6184,9 @@ function buildTrendCtx(sales,goals,repId,cm,name){
   if(g.hsi>0)ctx+=`HSI: ${Math.round(hsi.actual)}/${g.hsi}. `;
   ctx+=`P360: ${p360Count} vendidos este mes. `;
   if(g.acc>0)ctx+=`Accesorios: $${Math.round(accs.actual)} de $${g.acc} meta. `;
+  if(dueProsp.length>0)ctx+=`PROSPECTOS PARA LLAMAR HOY (${dueProsp.length}): ${dueProsp.slice(0,3).map(p=>`${p.name||'Sin nombre'}${p.interest?' interesado en '+p.interest:''}`).join('; ')}. `;
+  else if(allProsp.length>0)ctx+=`Pipeline: ${allProsp.length} prospectos activos sin llamada pendiente hoy. `;
+  if(dueFUs.length>0)ctx+=`Follow-ups vencidos hoy: ${dueFUs.length}. `;
   return ctx;
 }
 
