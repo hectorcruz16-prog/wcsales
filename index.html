@@ -6017,6 +6017,10 @@ async function showMotivationPopup(){
 
   // Si es modo IA, tarjeta estructurada via Gemini
   if(modeKey==='ai'){
+    const STATIC_TIPS=['💡 Pregunta siempre: "¿Cómo tienes el internet en casa?" — abre la puerta al HSI en cada visita.','💡 Después de activar un teléfono: "¿Te pongo el seguro para que cualquier daño quede cubierto?" — así abres P360 sin presión.','💡 Usa el trade-in: "Si traes tu teléfono viejo puedes aplicar un crédito hacia este nuevo." — siempre menciónalo.','💡 Cierre por asunción: no preguntes si quieren el plan, pregunta cuántas líneas necesitan.','💡 Cada cliente con familia es un candidato para el SyncUP Tracker — pregunta si tienen hijos o carro.'];
+    const elAI2=document.getElementById('mot-ai-body');
+    const showFallback2=()=>{if(elAI2)elAI2.innerHTML=`<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">${STATIC_TIPS[Math.floor(Math.random()*STATIC_TIPS.length)]}</div>`;};
+    const aiTimer=setTimeout(showFallback2,7000);
     try{
       const GKEY='AIzaSyCLfaV-JiA7wrNwPhGnKGNf2okZ9s5oIB0';
       const AI_TOPICS=[
@@ -6110,28 +6114,22 @@ Sin markdown. Sin asteriscos.`}
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:350,temperature:0.3,thinkingConfig:{thinkingBudget:0}}})
       });
-      const STATIC_TIPS=['💡 Pregunta siempre: "¿Cómo tienes el internet en casa?" — abre la puerta al HSI en cada visita.','💡 Después de activar un teléfono: "¿Te pongo el seguro para que cualquier daño quede cubierto?" — así abres P360 sin presión.','💡 Usa el trade-in: "Si traes tu teléfono viejo puedes aplicar un crédito hacia este nuevo." — siempre menciónalo.','💡 Cierre por asunción: no preguntes si quieren el plan, pregunta cuántas líneas necesitan.','💡 Cada cliente con familia es un candidato para el SyncUP Tracker — pregunta si tienen hijos o carro.'];
-      const showFallback=()=>{const el=document.getElementById('mot-ai-body');if(el)el.innerHTML=`<div style="font-size:12px;font-weight:600;color:#555;line-height:1.7;padding:4px 0">${STATIC_TIPS[Math.floor(Math.random()*STATIC_TIPS.length)]}</div>`;};
-      // Timeout de 7s — si no responde Gemini, muestra tip estatico
-      const aiTimer=setTimeout(showFallback,7000);
-      try{
-        if(r.ok){
-          const data=await r.json();
-          const raw=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim();
-          if(raw){
-            clearTimeout(aiTimer);
-            const lines=raw.replace(/\*\*/g,'').replace(/\*/g,'').split('\n').filter(l=>l.trim());
-            const html=lines.map(l=>{
-              const t=l.trim();
-              if(/^[A-ZÁÉÍÓÚÑ\s]+:$/.test(t)) return `<div style="font-size:9px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin:7px 0 2px">${t.replace(':','')}</div>`;
-              if(t.startsWith('•')||t.startsWith('-')) return `<div style="display:flex;gap:5px;margin-bottom:2px"><span style="color:var(--m)">•</span><span>${t.replace(/^[•\-]\s*/,'')}</span></div>`;
-              return `<div style="margin-bottom:3px">${t}</div>`;
-            }).join('');
-            const elAI=document.getElementById('mot-ai-body');
-            if(elAI) elAI.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);letter-spacing:.5px;margin-bottom:5px">${topic.icon} ${topic.label}</div><div style="font-size:12px;font-weight:500;line-height:1.5;color:#222">${html}</div>`;
-          }
+      if(r.ok){
+        const data=await r.json();
+        const raw=((data.candidates||[])[0]?.content?.parts?.[0]?.text||'').trim();
+        if(raw){
+          clearTimeout(aiTimer);
+          const lines=raw.replace(/\*\*/g,'').replace(/\*/g,'').split('\n').filter(l=>l.trim());
+          const html=lines.map(l=>{
+            const t=l.trim();
+            if(/^[A-ZÁÉÍÓÚÑ\s]+:$/.test(t)) return `<div style="font-size:9px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin:7px 0 2px">${t.replace(':','')}</div>`;
+            if(t.startsWith('•')||t.startsWith('-')) return `<div style="display:flex;gap:5px;margin-bottom:2px"><span style="color:var(--m)">•</span><span>${t.replace(/^[•\-]\s*/,'')}</span></div>`;
+            return `<div style="margin-bottom:3px">${t}</div>`;
+          }).join('');
+          if(elAI2) elAI2.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--m);letter-spacing:.5px;margin-bottom:5px">${topic.icon} ${topic.label}</div><div style="font-size:12px;font-weight:500;line-height:1.5;color:#222">${html}</div>`;
         }
-      }catch(e){clearTimeout(aiTimer);showFallback();}
+      }
+    }catch(e){clearTimeout(aiTimer);showFallback2();}
   }
 
   // Si es modo phone, cargar contenido IA async
