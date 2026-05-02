@@ -6015,14 +6015,19 @@ async function showMotivationPopup(){
   document.body.appendChild(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
 
-  // Si es modo IA, cargar mensaje async
+  // Si es modo IA, cargar mensaje async via Gemini
   if(modeKey==='ai' && ctx){
     try{
-      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:150,messages:[{role:'user',content:`Eres el asesor de ventas de T-Mobile. Analiza el contexto y da 2-3 acciones concretas que el vendedor debe hacer AHORA. Si hay prospectos para llamar, menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases vagas ni motivacionales. Máximo 80 palabras, solo acciones específicas.\nContexto: ${ctx}`}]})});
+      const GKEY='AIzaSyA1vSg3GGbxmL5XiHosdUsO8YWjdYU2WBY';
+      const aiPrompt=`Eres el asesor de ventas de T-Mobile. DISPOSITIVOS VIGENTES 2025-2026: iPhones: iPhone 17 Pro Max, iPhone 17 Pro, iPhone 17 Air, iPhone 17. Samsung: Galaxy S26 Ultra, S26+, S26, S25 FE, S25 Ultra, A37 5G, A17 5G. Wearables: Apple Watch Series 10, Apple Watch SE 3, Galaxy Watch 8, Galaxy Watch Ultra. Servicios: HSI, P360, SyncUP Tracker. Planes: MORE y BEYOND. PROHIBIDO mencionar iPhone 16 o anteriores.\nAnaliza el contexto y da 2-3 acciones CONCRETAS que el vendedor debe hacer AHORA. Si hay prospectos para llamar menciona el nombre. Si hay metas rezagadas indica qué producto priorizar. Si hay follow-ups vencidos dilo. Usa los números reales. Sin frases motivacionales vagas. Solo acciones específicas. Máximo 80 palabras.\nContexto: ${ctx}`;
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GKEY,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:aiPrompt}]}],generationConfig:{maxOutputTokens:150,temperature:0.7}})
+      });
       const data=await r.json();
-      const msg=(data.content||[]).map(b=>b.text||'').join('').trim();
+      const msg=(data.candidates||[])[0]?.content?.parts?.[0]?.text||'';
       const el=document.getElementById('mot-ai-body');
-      if(el&&msg) el.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg}</div>`;
+      if(el&&msg.trim()) el.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${msg.trim()}</div>`;
     }catch(e){
       const el=document.getElementById('mot-ai-body');
       if(el) el.innerHTML=`<div style="font-size:13px;font-weight:600;line-height:1.6;color:#222">${_pick(POPUP_CONTENT.tips).body}</div>`;
