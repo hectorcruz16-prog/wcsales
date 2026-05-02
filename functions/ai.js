@@ -1,13 +1,7 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  const GEMINI_KEY = env.GEMINI_KEY;
-  if (!GEMINI_KEY) {
-    return new Response(JSON.stringify({ error: 'GEMINI_KEY not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+  const GEMINI_KEY = env.GEMINI_KEY || 'AIzaSyCdRIpAcAidXJkc8CTimDIOQolBadjD4m_';
 
   let body;
   try {
