@@ -1,7 +1,7 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  const GEMINI_KEY = env.GEMINI_KEY || 'AIzaSyCdRIpAcAidXJkc8CTimDIOQolBadjD4m_';
+  const GROQ_KEY = env.GROQ_KEY || 'gsk_vHUCsorbuZ4lWsLpIOmXWGdyb3FYxt3Faa1kfJhWIaEAKgq14Xq';
 
   let body;
   try {
@@ -13,14 +13,14 @@ export async function onRequestPost(context) {
     });
   }
 
-  const upstream = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }
-  );
+  const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_KEY
+    },
+    body: JSON.stringify(body)
+  });
 
   const data = await upstream.json();
   return new Response(JSON.stringify(data), {
