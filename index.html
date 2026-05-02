@@ -1402,7 +1402,7 @@ function selTab(tab){
   if(tab==='trend')renderTrendSeller();
   if(tab==='mis-ventas')renderMisVentasTab('seller');
   if(tab==='concursos')renderSellerConcursos();
-  if(tab==='trivia')renderTrivia();
+  if(tab==='trivia')renderTrivia('trivia-body');
 }
 function mgrTab(tab){
   ['ventas','equipo','concursos','tareas','resultados','cuota','prospectos','followups','trend','mis-ventas','trivia'].forEach(t=>{
@@ -1422,7 +1422,7 @@ function mgrTab(tab){
   if(tab==='equipo'){renderMgrEquipo();}
   if(tab==='mis-ventas')renderMisVentasTab('mgr');
   if(tab==='trend')renderTrendMgr();
-  if(tab==='trivia')renderTriviaIn('trivia-body-mgr');
+  if(tab==='trivia')renderTrivia('trivia-body-mgr');
 }
 function admTab(tab){
   ['resumen','tiendas','concursos','catalogo','tareas','resultados','usuarios','cuota','prospectos','trend','mis-ventas','trivia'].forEach(t=>{
@@ -1440,7 +1440,7 @@ function admTab(tab){
   if(tab==='prospectos')renderAdmProspectos();
   if(tab==='mis-ventas')renderMisVentasTab('adm');
   if(tab==='trend')renderTrendAdm();
-  if(tab==='trivia')renderTriviaIn('trivia-body-adm');
+  if(tab==='trivia')renderTrivia('trivia-body-adm');
 }
 var _mgrMonth = ''; // empty = curMonth
 
@@ -6671,14 +6671,15 @@ async function fetchGeminiSalesTip(){
 // TRIVIA GAME
 // ══════════════════════════════════════════════════════════════════════
 var TRIVIA_STATE=null;
+var _triviaContainerId='trivia-body';
 
 function _triviaToday(){return new Date().toISOString().split('T')[0];}
 function getTriviaPlays(){return parseInt(localStorage.getItem('wcs_trivia_'+_triviaToday())||'0');}
 function incTriviaPlays(){var n=getTriviaPlays()+1;localStorage.setItem('wcs_trivia_'+_triviaToday(),n);return n;}
 
-function _triviaContainer(){return document.getElementById('trivia-body')||document.getElementById('trivia-body-mgr')||document.getElementById('trivia-body-adm');}
-function renderTriviaIn(id){var el=document.getElementById(id);if(el)el.id='trivia-body';renderTrivia();}
-function renderTrivia(){
+function _triviaContainer(){return document.getElementById(_triviaContainerId);}
+function renderTrivia(containerId){
+  if(containerId)_triviaContainerId=containerId;
   var body=_triviaContainer();
   if(!body)return;
   var plays=getTriviaPlays();
